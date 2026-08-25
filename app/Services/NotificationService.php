@@ -8,10 +8,12 @@ use Illuminate\Support\Str;
 
 class NotificationService
 {
-    public static function send(User $user, string $type, string $title, string $message, ?string $link = null, ?string $icon = 'bell'): void
+    public static function send(User $user, string $type, string $title, string $message, ?string $link = null, ?string $icon = 'bell'): string
     {
+        $id = (string) Str::uuid();
+
         DB::table('notifications')->insert([
-            'id' => (string) Str::uuid(),
+            'id' => $id,
             'type' => $type,
             'notifiable_type' => User::class,
             'notifiable_id' => $user->id,
@@ -26,6 +28,8 @@ class NotificationService
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        return $id;
     }
 
     public static function notifyAdmins(string $type, string $title, string $message, ?string $link = null): void
