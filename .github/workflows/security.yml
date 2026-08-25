@@ -19,7 +19,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.2'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, sqlite3
         coverage: none
 
     - name: Setup Node.js
@@ -30,16 +30,19 @@ jobs:
     - name: Validate composer.json
       run: composer validate --strict
 
-    - name: Composer Security Audit
-      run: composer audit
-
     - name: Install PHP Dependencies
       run: composer install --prefer-dist --no-progress
 
+    - name: Composer Security Audit
+      run: composer audit
+
     - name: Install NPM Dependencies & Audit
       run: |
-        npm ci
+        npm install
         npm audit
+
+    - name: Build Frontend Assets
+      run: npm run build
 
     - name: Run Larastan / PHPStan
       run: ./vendor/bin/phpstan analyse --error-format=github
@@ -47,5 +50,8 @@ jobs:
     - name: Run Automated Security Test Suite
       run: |
         cp .env.example .env
+        mkdir -p database
+        touch database/database.sqlite
         php artisan key:generate
+        php artisan migrate --force
         php artisan test
