@@ -74,8 +74,14 @@ class AuthenticationAndRbacTest extends TestCase
         $res2->assertSessionHasErrors(['name', 'username', 'email', 'password', 'terms']);
     }
 
-    public function test_registration_succeeds_with_valid_data(): void
+    public function test_registration_creates_pending_account_and_requires_admin_approval(): void
     {
+        $admin = User::factory()->create([
+            'role' => UserRole::ADMIN,
+            'status' => UserStatus::ACTIVE,
+        ]);
+
+        // 1. User registers
         $response = $this->post(route('register.post'), [
             'name' => 'Sarah Connor',
             'username' => 'sarahc',
@@ -85,11 +91,37 @@ class AuthenticationAndRbacTest extends TestCase
             'terms' => '1',
         ]);
 
-        $response->assertRedirect(route('user.dashboard'));
-        $this->assertDatabaseHas('users', [
+        // Redirects to pending screen
+        $response->assertRedirect(route('register.pending'));
+
+        // Stored with PENDING status
+        $user = User::where('email', 'sarah@afterlife.dev')->first();
+        $this->assertNotNull($user);
+        $this->assertEquals(UserStatus::PENDING, $user->status);
+
+        // 2. Attempting to log in while pending fails
+        $loginAttempt = $this->post(route('login.post'), [
             'email' => 'sarah@afterlife.dev',
-            'username' => 'sarahc',
+            'password' => 'Pass1234',
         ]);
+        $loginAttempt->assertSessionHasErrors(['email']);
+        $this->assertGuest();
+
+        // 3. Admin approves account
+        $this->actingAs($admin)->post(route('admin.users.approve', $user));
+
+        $user->refresh();
+        $this->assertEquals(UserStatus::ACTIVE, $user->status);
+
+        // 4. User can now successfully sign in (with clean guest state)
+        \Illuminate\Support\Facades\Auth::logout();
+        $this->flushSession();
+        $this->post(route('login.post'), [
+            'email' => 'sarah@afterlife.dev',
+            'password' => 'Pass1234',
+        ])->assertRedirect(route('user.dashboard'));
+
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_forgot_password_and_password_reset_flow(): void
@@ -97,6 +129,7 @@ class AuthenticationAndRbacTest extends TestCase
         $user = User::factory()->create([
             'email' => 'resurrector@afterlife.dev',
             'password' => Hash::make('OldPassword1'),
+            'status' => UserStatus::ACTIVE,
         ]);
 
         // Request reset link
