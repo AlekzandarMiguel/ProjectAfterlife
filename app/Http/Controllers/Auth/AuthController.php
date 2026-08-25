@@ -173,15 +173,38 @@ class AuthController extends Controller
 
         AuditService::log('USER_REGISTERED_PENDING_APPROVAL', $user);
 
-        return redirect()->route('register.pending')->with([
+        session(['registered_email' => $user->email, 'registered_name' => $user->name]);
+
+        return redirect()->route('register.pending', ['email' => $user->email])->with([
             'registered_email' => $user->email,
             'registered_name' => $user->name,
         ]);
     }
 
-        public function showRegisterPending(): View
+        public function showRegisterPending(Request $request): View
     {
-        return view('auth.register-pending');
+        $email = session('registered_email') ?? $request->query('email');
+        $user = $email ? User::where('email', $email)->first() : null;
+        $isApproved = $user ? $user->isActive() : false;
+
+        return view('auth.register-pending', compact('user', 'isApproved', 'email'));
+    }
+
+    public function checkRegistrationStatus(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $email = session('registered_email') ?? $request->query('email');
+        $user = $email ? User::where('email', $email)->first() : null;
+
+        if (!$user) {
+            return response()->json(['status' => 'unknown', 'is_approved' => false]);
+        }
+
+        return response()->json([
+            'status' => $user->status->value,
+            'is_approved' => $user->isActive(),
+            'is_suspended' => $user->isSuspended(),
+            'redirect_url' => route('login'),
+        ]);
     }
 
     public function showForgotPassword(): View

@@ -97,7 +97,7 @@ class AuthenticationAndRbacTest extends TestCase
         ]);
 
         // Redirects to pending screen
-        $response->assertRedirect(route('register.pending'));
+        $response->assertRedirect(route('register.pending', ['email' => 'sarah@afterlife.dev']));
 
         // Stored with PENDING status
         $user = User::where('email', 'sarah@afterlife.dev')->first();
