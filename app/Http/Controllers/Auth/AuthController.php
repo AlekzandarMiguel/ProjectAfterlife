@@ -7,7 +7,9 @@ use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Mail\RegistrationReceivedMail;
 use App\Services\AuditService;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -162,6 +164,12 @@ class AuthController extends Controller
             "New developer {$user->name} ({$user->email}) registered and is awaiting administrator verification.",
             route('admin.users.show', $user)
         );
+
+        try {
+            Mail::to($user->email)->send(new RegistrationReceivedMail($user));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed sending registration received email to {$user->email}: " . $e->getMessage());
+        }
 
         AuditService::log('USER_REGISTERED_PENDING_APPROVAL', $user);
 

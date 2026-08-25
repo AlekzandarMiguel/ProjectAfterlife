@@ -6,7 +6,9 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Mail\AccountApprovedMail;
 use App\Services\AuditService;
+use Illuminate\Support\Facades\Mail;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,6 +59,12 @@ class UserController extends Controller
             'Your developer account has been approved by the administrator. You now have full access to Project Afterlife.',
             route('user.dashboard')
         );
+
+        try {
+            Mail::to($user->email)->send(new AccountApprovedMail($user));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed sending account approval email to {$user->email}: " . $e->getMessage());
+        }
 
         AuditService::log('USER_APPROVED_BY_ADMIN', $user, ['approved_by' => auth()->id()]);
 
