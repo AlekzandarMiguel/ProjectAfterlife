@@ -8,6 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property int $id
+ * @property int $project_id
+ * @property string $version_number
+ * @property string|null $changelog
+ * @property string|null $release_notes
+ * @property-read \App\Models\Project $project
+ */
 class ProjectVersion extends Model
 {
     use HasFactory;

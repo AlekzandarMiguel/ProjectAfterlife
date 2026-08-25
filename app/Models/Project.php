@@ -15,6 +15,42 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int|null $original_user_id
+ * @property int $category_id
+ * @property string $title
+ * @property string $slug
+ * @property string $tagline
+ * @property string $description
+ * @property string $reason_for_abandonment
+ * @property string|null $architecture_notes
+ * @property \App\Enums\ProjectType $project_type
+ * @property \App\Enums\DevelopmentStatus $development_status
+ * @property \App\Enums\ProjectStatus $status
+ * @property int $recovery_progress
+ * @property string|null $rejection_reason
+ * @property string|null $source_repository_url
+ * @property string|null $demo_url
+ * @property \Illuminate\Support\Carbon|null $resurrected_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\User $owner
+ * @property-read \App\Models\User|null $originalOwner
+ * @property-read \App\Models\Category $category
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Technology> $technologies
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProjectVersion> $versions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProjectFile> $files
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProjectScreenshot> $screenshots
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\AdoptionRequest> $adoptionRequests
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\RecoveryTask> $recoveryTasks
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\RecoveryUpdate> $recoveryUpdates
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FinalReviewSubmission> $finalReviews
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\OwnershipTransfer> $ownershipTransfers
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProjectHistory> $history
+ * @property-read \App\Models\OwnershipDeclaration|null $ownershipDeclaration
+ */
 class Project extends Model
 {
     use HasFactory, SoftDeletes;

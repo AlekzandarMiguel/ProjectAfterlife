@@ -144,7 +144,7 @@ class RecoveryService
         return DB::transaction(function () use ($project, $owner, $data, $finalVersion) {
             $submission = FinalReviewSubmission::create([
                 'project_id' => $project->id,
-                'version_id' => $finalVersion?->id ?? $project->latestVersion?->id,
+                'version_id' => $finalVersion ? $finalVersion->id : ($project->latestVersion instanceof \App\Models\ProjectVersion ? $project->latestVersion->id : null),
                 'submitted_by' => $owner->id,
                 'completion_summary' => $data['completion_summary'],
                 'completed_features' => $data['completed_features'],

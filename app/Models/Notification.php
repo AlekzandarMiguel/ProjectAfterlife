@@ -9,29 +9,35 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property int $user_id
- * @property string|null $bio
- * @property int $years_of_experience
- * @property array<string>|null $skills
+ * @property string $type
+ * @property string $title
+ * @property string $message
+ * @property string|null $action_url
+ * @property bool $is_read
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\User $user
  */
-class UserProfile extends Model
+class Notification extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'bio',
-        'years_of_experience',
-        'website_url',
-        'location',
-        'skills',
+        'type',
+        'title',
+        'message',
+        'action_url',
+        'is_read',
     ];
 
     protected $casts = [
-        'skills' => 'array',
-        'years_of_experience' => 'integer',
+        'is_read' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

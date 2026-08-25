@@ -75,9 +75,9 @@ class RecoveryWorkspaceController extends Controller
         ]);
 
         $statusEnum = match($validated['status']) {
-            'todo' => TaskStatus::TODO,
             'in_progress' => TaskStatus::IN_PROGRESS,
             'completed' => TaskStatus::COMPLETED,
+            default => TaskStatus::TODO,
         };
 
         $this->recoveryService->updateTaskStatus($task, $statusEnum, auth()->user());

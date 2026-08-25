@@ -7,6 +7,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $project_id
+ * @property string $file_path
+ * @property string $original_filename
+ * @property \App\Enums\FileType $file_type
+ * @property int $file_size
+ * @property string|null $mime_type
+ * @property-read \App\Models\Project $project
+ */
 class ProjectFile extends Model
 {
     use HasFactory;

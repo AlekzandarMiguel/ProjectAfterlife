@@ -1,0 +1,51 @@
+name: Security CI Audit & Analysis
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  security-audit:
+    name: Security Audits & Static Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite
+        coverage: none
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Validate composer.json
+      run: composer validate --strict
+
+    - name: Composer Security Audit
+      run: composer audit
+
+    - name: Install PHP Dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Install NPM Dependencies & Audit
+      run: |
+        npm ci
+        npm audit
+
+    - name: Run Larastan / PHPStan
+      run: ./vendor/bin/phpstan analyse --error-format=github
+
+    - name: Run Automated Security Test Suite
+      run: |
+        cp .env.example .env
+        php artisan key:generate
+        php artisan test

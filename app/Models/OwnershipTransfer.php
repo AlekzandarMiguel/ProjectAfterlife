@@ -6,6 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $project_id
+ * @property int $previous_user_id
+ * @property int $new_user_id
+ * @property int $approved_by
+ * @property int|null $adoption_request_id
+ * @property string|null $transfer_reason
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property-read \App\Models\Project $project
+ * @property-read \App\Models\User $previousOwner
+ * @property-read \App\Models\User $newOwner
+ * @property-read \App\Models\User $adminApprover
+ */
 class OwnershipTransfer extends Model
 {
     use HasFactory;
