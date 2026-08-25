@@ -74,15 +74,29 @@ class AdoptionService
     public function approveAdoptionAndTransferOwnership(AdoptionRequest $request, User $admin, ?string $adminNotes = null): OwnershipTransfer
     {
         return DB::transaction(function () use ($request, $admin, $adminNotes) {
-            // Pessimistic lock on project row to prevent race conditions
+            // 1. Lock the project with pessimistic row lock
             $project = Project::where('id', $request->project_id)->lockForUpdate()->firstOrFail();
 
-            if ($request->status !== AdoptionStatus::PENDING) {
+            // 2. Lock the adoption request with pessimistic row lock
+            $lockedRequest = AdoptionRequest::where('id', $request->id)->lockForUpdate()->firstOrFail();
+
+            // 3. Verify request is still valid and pending
+            if ($lockedRequest->status !== AdoptionStatus::PENDING) {
                 throw new Exception('Adoption request is not in pending status.');
             }
 
+            // 4. Verify project is still eligible for adoption
+            if (!in_array($project->status, [ProjectStatus::AVAILABLE, ProjectStatus::ADOPTION_PENDING])) {
+                throw new Exception('Project is not in an eligible status for adoption transfer.');
+            }
+
             $previousOwner = $project->owner;
-            $newOwner = $request->applicant;
+            $newOwner = $lockedRequest->applicant;
+
+            // 5. Verify applicant is active and not current owner
+            if (!$newOwner->isActive()) {
+                throw new Exception('Applicant account is not active.');
+            }
 
             if ($previousOwner->id === $newOwner->id) {
                 throw new Exception('Cannot transfer ownership to the current owner.');
