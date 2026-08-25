@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Mail\AccountApprovedMail;
+use App\Models\User;
+use App\Models\UserProfile;
 use App\Services\AuditService;
-use Illuminate\Support\Facades\Mail;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -40,6 +43,78 @@ class UserController extends Controller
         $users = $query->latest()->paginate(15)->withQueryString();
 
         return view('admin.users.index', compact('users', 'pendingCount'));
+    }
+
+    public function create(): View
+    {
+        $roles = UserRole::cases();
+        $statuses = UserStatus::cases();
+        return view('admin.users.create', compact('roles', 'statuses'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'min:3',
+                'max:100',
+                'regex:/^[a-zA-Z\s\.\'-]+$/'
+            ],
+            'username' => [
+                'required',
+                'string',
+                'min:3',
+                'max:30',
+                'alpha_dash:ascii',
+                'unique:users,username',
+            ],
+            'email' => [
+                'required',
+                'string',
+                'email:rfc',
+                'max:255',
+                'unique:users,email',
+                'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'
+            ],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                Password::min(8)->letters()->numbers()
+            ],
+            'role' => ['required', new Enum(UserRole::class)],
+            'status' => ['required', new Enum(UserStatus::class)],
+            'bio' => ['nullable', 'string', 'max:500'],
+            'years_of_experience' => ['nullable', 'integer', 'min:0', 'max:60'],
+        ]);
+
+        $user = User::create([
+            'name' => trim($validated['name']),
+            'username' => strtolower(trim($validated['username'])),
+            'email' => strtolower(trim($validated['email'])),
+            'password' => $validated['password'], // User model automatically casts hashed password
+            'role' => UserRole::from($validated['role']),
+            'status' => UserStatus::from($validated['status']),
+        ]);
+
+        UserProfile::create([
+            'user_id' => $user->id,
+            'bio' => $validated['bio'] ?? ($user->isAdmin() ? 'Project Afterlife System Administrator' : 'Software developer and recovery enthusiast.'),
+            'years_of_experience' => $validated['years_of_experience'] ?? ($user->isAdmin() ? 5 : 1),
+            'skills' => [],
+        ]);
+
+        AuditService::log('ADMIN_PROVISIONED_USER', $user, [
+            'created_by' => auth()->id(),
+            'assigned_role' => $user->role->value,
+            'initial_status' => $user->status->value,
+        ]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', "Account for '{$user->name}' ({$user->role->label()}) has been successfully created.");
     }
 
     public function show(User $user): View

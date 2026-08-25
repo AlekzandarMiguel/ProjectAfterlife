@@ -8,6 +8,16 @@
             <p class="text-xs text-slate-400 mt-0.5">Manage developer accounts, review pending signups, and control permissions.</p>
         </div>
 
+        <!-- Create User Button -->
+        <div>
+            <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-950/50 transition duration-150">
+                <span>+</span>
+                <span>Create User / Admin</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="flex items-center justify-between gap-4 pb-2">
         <!-- Filter Tabs -->
         <div class="flex items-center gap-2">
             <a href="{{ route('admin.users.index') }}" class="px-3 py-1.5 rounded-lg text-xs font-medium {{ !request('status') ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/30' : 'bg-slate-800 text-slate-400 hover:text-white' }} transition">
