@@ -38,6 +38,58 @@ enum ProjectStatus: string
         };
     }
 
+    public function badgeClasses(): string
+    {
+        return match($this) {
+            self::DRAFT => 'bg-slate-800 text-slate-300 border-slate-700',
+            self::PENDING_REVIEW => 'bg-amber-950/40 text-amber-300 border-amber-800/50',
+            self::AVAILABLE => 'bg-emerald-950/40 text-emerald-300 border-emerald-800/50',
+            self::ADOPTION_PENDING => 'bg-purple-950/40 text-purple-300 border-purple-800/50',
+            self::ADOPTED, self::UNDER_RECOVERY => 'bg-blue-950/40 text-blue-300 border-blue-800/50',
+            self::INACTIVE => 'bg-yellow-950/40 text-yellow-300 border-yellow-800/50',
+            self::ABANDONED_AGAIN => 'bg-orange-950/40 text-orange-300 border-orange-800/50',
+            self::PENDING_FINAL_REVIEW => 'bg-indigo-950/40 text-indigo-300 border-indigo-800/50',
+            self::RESURRECTED => 'bg-teal-950/40 text-teal-300 border-teal-800/50',
+            self::REJECTED => 'bg-rose-950/40 text-rose-300 border-rose-800/50',
+            self::REVISION_REQUIRED => 'bg-orange-950/40 text-orange-300 border-orange-800/50',
+        };
+    }
+
+    public function color(): string
+    {
+        return match($this) {
+            self::DRAFT => 'slate',
+            self::PENDING_REVIEW => 'amber',
+            self::AVAILABLE => 'emerald',
+            self::ADOPTION_PENDING => 'purple',
+            self::ADOPTED, self::UNDER_RECOVERY => 'blue',
+            self::INACTIVE => 'yellow',
+            self::ABANDONED_AGAIN => 'orange',
+            self::PENDING_FINAL_REVIEW => 'indigo',
+            self::RESURRECTED => 'teal',
+            self::REJECTED => 'rose',
+            self::REVISION_REQUIRED => 'orange',
+        };
+    }
+
+    public function description(): string
+    {
+        return match($this) {
+            self::DRAFT => 'Work in progress, not yet submitted for review.',
+            self::PENDING_REVIEW => 'Submitted by author, awaiting Administrator verification.',
+            self::AVAILABLE => 'Verified abandoned software open for community developer adoption.',
+            self::ADOPTION_PENDING => 'Adoption application submitted and under admin review.',
+            self::ADOPTED => 'Adopted by a developer, transitioning to active recovery.',
+            self::UNDER_RECOVERY => 'Actively being refactored, modernized, and fixed.',
+            self::INACTIVE => 'Recovery progress stalled. Subject to reassignment if inactive.',
+            self::ABANDONED_AGAIN => 'Developer abandoned recovery. Project returned to public pool.',
+            self::PENDING_FINAL_REVIEW => 'Modernized project submitted for final Resurrection Certification.',
+            self::RESURRECTED => 'Fully restored, verified, and active again in the open source ecosystem.',
+            self::REJECTED => 'Did not meet repository quality or integrity standards.',
+            self::REVISION_REQUIRED => 'Administrator requested revisions or additional details.',
+        };
+    }
+
     public function canTransitionTo(ProjectStatus $target, User $actor): bool
     {
         if ($this === $target) {
