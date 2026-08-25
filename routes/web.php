@@ -51,9 +51,11 @@ Route::middleware('guest')->group(function () {
     Route::get('/register/pending', [AuthController::class, 'showRegisterPending'])->name('register.pending');
     Route::get('/register/check-status', [AuthController::class, 'checkRegistrationStatus'])->name('register.check-status');
 
-    // Password Reset
+    // Password Reset via 6-Digit OTP
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:15,1');
+    Route::get('/reset-password/verify-code', [AuthController::class, 'showVerifyCode'])->name('password.verify.form');
+    Route::post('/reset-password/verify-code', [AuthController::class, 'verifyCode'])->name('password.verify.code')->middleware('throttle:15,1');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update')->middleware('throttle:15,1');
 });

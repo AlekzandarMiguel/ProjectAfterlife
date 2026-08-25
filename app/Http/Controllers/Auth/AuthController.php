@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Mail\PasswordResetOtpMail;
 use App\Mail\RegistrationReceivedMail;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\Mail;
@@ -228,19 +229,69 @@ class AuthController extends Controller
             'email.exists' => 'We could not find an account with that email address.',
         ]);
 
-        $token = Str::random(64);
+        $email = strtolower(trim($request->input('email')));
+        $user = User::where('email', $email)->firstOrFail();
+
+        // Generate cryptographically secure 6-digit OTP
+        $otp = sprintf('%06d', random_int(100000, 999999));
 
         DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $request->input('email')],
+            ['email' => $email],
             [
-                'token' => Hash::make($token),
+                'token' => Hash::make($otp),
                 'created_at' => Carbon::now(),
             ]
         );
 
-        $resetUrl = route('password.reset', ['token' => $token, 'email' => $request->input('email')]);
+        try {
+            Mail::to($user->email)->send(new PasswordResetOtpMail($user, $otp));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed sending password reset OTP to {$user->email}: " . $e->getMessage());
+        }
 
-        return back()->with('status', 'A password reset token has been generated.')->with('reset_url', $resetUrl);
+        return redirect()->route('password.verify.form', ['email' => $email])
+            ->with('status', 'A 6-digit verification code has been sent to your email.');
+    }
+
+    public function showVerifyCode(Request $request): View
+    {
+        $email = $request->query('email', '');
+        return view('auth.verify-reset-code', compact('email'));
+    }
+
+    public function verifyCode(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'email' => ['required', 'email:rfc', 'exists:users,email'],
+            'code' => ['required', 'string', 'size:6'],
+        ], [
+            'code.required' => 'Please enter the 6-digit verification code.',
+            'code.size' => 'The verification code must be exactly 6 digits.',
+        ]);
+
+        $email = strtolower(trim($request->input('email')));
+        $code = trim($request->input('code'));
+
+        $record = DB::table('password_reset_tokens')->where('email', $email)->first();
+
+        if (!$record || !Hash::check($code, $record->token)) {
+            return back()->withErrors(['code' => 'The 6-digit verification code is invalid.'])->withInput();
+        }
+
+        if (Carbon::parse($record->created_at)->addMinutes(15)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $email)->delete();
+            return back()->withErrors(['code' => 'This verification code has expired. Please request a new code.'])->withInput();
+        }
+
+        // Generate verified reset authorization token
+        $verifiedToken = Str::random(64);
+        DB::table('password_reset_tokens')->where('email', $email)->update([
+            'token' => Hash::make($verifiedToken),
+            'created_at' => Carbon::now(),
+        ]);
+
+        return redirect()->route('password.reset', ['token' => $verifiedToken, 'email' => $email])
+            ->with('status', 'Code verified successfully. Please choose your new password.');
     }
 
     public function showResetPassword(string $token, Request $request): View
@@ -272,23 +323,30 @@ class AuthController extends Controller
             'password.confirmed' => 'Password confirmation does not match.',
         ]);
 
-        $record = DB::table('password_reset_tokens')->where('email', $request->input('email'))->first();
+        $email = strtolower(trim($request->input('email')));
+        $record = DB::table('password_reset_tokens')->where('email', $email)->first();
 
         if (!$record || !Hash::check($request->input('token'), $record->token)) {
-            return back()->withErrors(['email' => 'This password reset link is invalid or has expired. Please request a new one.']);
+            return back()->withErrors(['email' => 'The password reset session has expired or is invalid. Please request a new code.']);
         }
 
-        $user = User::where('email', $request->input('email'))->first();
-        if ($user) {
-            $user->update([
-                'password' => Hash::make($request->input('password')),
-            ]);
-
-            DB::table('password_reset_tokens')->where('email', $request->input('email'))->delete();
-            AuditService::log('PASSWORD_RESET_COMPLETED', $user);
+        if (Carbon::parse($record->created_at)->addMinutes(15)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $email)->delete();
+            return back()->withErrors(['email' => 'This reset session has expired. Please request a new code.']);
         }
 
-        return redirect()->route('login')->with('success', 'Your password has been successfully reset. You can now sign in with your new credentials.');
+        $user = User::where('email', $email)->firstOrFail();
+
+        $user->forceFill([
+            'password' => $request->input('password'),
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        DB::table('password_reset_tokens')->where('email', $email)->delete();
+
+        AuditService::log('USER_PASSWORD_RESET', $user);
+
+        return redirect()->route('login')->with('success', 'Your password has been successfully reset. Please sign in with your new password.');
     }
 
     public function logout(Request $request): RedirectResponse
