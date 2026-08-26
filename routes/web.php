@@ -44,6 +44,9 @@ Route::get('/resurrected', [ResurrectedController::class, 'index'])->name('resur
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest')->group(function () {
+    // Google OAuth Routes
+    Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
+    Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware('throttle:15,1');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');

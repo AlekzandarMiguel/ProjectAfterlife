@@ -41,6 +41,8 @@ class User extends Authenticatable
         'status',
         'avatar',
         'github_url',
+        'google_id',
+        'auth_provider',
     ];
 
     protected $hidden = [
