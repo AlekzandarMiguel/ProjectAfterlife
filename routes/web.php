@@ -43,7 +43,7 @@ Route::get('/resurrected', [ResurrectedController::class, 'index'])->name('resur
 | Authentication Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', 'throttle:6,1'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
