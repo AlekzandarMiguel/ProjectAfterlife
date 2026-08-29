@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Mail\AccountApprovedMail;
+use App\Mail\RegistrationReceivedMail;
 use App\Models\User;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class AuthenticationAndRbacTest extends TestCase
@@ -76,6 +79,8 @@ class AuthenticationAndRbacTest extends TestCase
 
     public function test_registration_creates_pending_account_and_requires_admin_approval(): void
     {
+        Mail::fake();
+
         $admin = User::factory()->create([
             'role' => UserRole::ADMIN,
             'status' => UserStatus::ACTIVE,
@@ -99,6 +104,11 @@ class AuthenticationAndRbacTest extends TestCase
         $this->assertNotNull($user);
         $this->assertEquals(UserStatus::PENDING, $user->status);
 
+        // Verify registration email sent to user
+        Mail::assertSent(RegistrationReceivedMail::class, function ($mail) use ($user) {
+            return $mail->hasTo($user->email);
+        });
+
         // 2. Attempting to log in while pending fails
         $loginAttempt = $this->post(route('login.post'), [
             'email' => 'sarah@afterlife.dev',
@@ -112,6 +122,11 @@ class AuthenticationAndRbacTest extends TestCase
 
         $user->refresh();
         $this->assertEquals(UserStatus::ACTIVE, $user->status);
+
+        // Verify account approved email sent to user
+        Mail::assertSent(AccountApprovedMail::class, function ($mail) use ($user) {
+            return $mail->hasTo($user->email);
+        });
 
         // 4. User can now successfully sign in (with clean guest state)
         \Illuminate\Support\Facades\Auth::logout();
