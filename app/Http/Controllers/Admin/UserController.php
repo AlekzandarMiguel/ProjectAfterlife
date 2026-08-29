@@ -12,6 +12,7 @@ use App\Services\AuditService;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rules\Password;
@@ -171,5 +172,60 @@ class UserController extends Controller
         AuditService::log('USER_STATUS_TOGGLED', $user, ['new_status' => $newStatus->value]);
 
         return back()->with('success', "User {$user->name} status changed to {$newStatus->value}.");
+    }
+    public function promote(Request $request, User $user): RedirectResponse
+    {
+        $admin = auth()->user();
+
+        if ($user->id === $admin->id) {
+            return back()->with('error', 'Security Violation: You cannot alter your own administrative role.');
+        }
+
+        if (!$user->isActive()) {
+            return back()->with('error', 'Cannot change role for inactive or suspended users.');
+        }
+
+        $validated = $request->validate([
+            'role' => ['required', new Enum(UserRole::class)],
+            'reason' => ['required', 'string', 'min:10', 'max:500'],
+            'admin_password' => ['required', 'string'],
+        ], [
+            'reason.required' => 'A formal security justification is required for role elevation.',
+            'reason.min' => 'Security justification must be at least 10 characters.',
+            'admin_password.required' => 'Please confirm your administrator password to authorize this action.',
+        ]);
+
+        // Sudo-mode security verification: authenticate acting admin's password
+        if (!Hash::check($validated['admin_password'], $admin->password)) {
+            return back()->withErrors(['admin_password' => 'Security verification failed: Incorrect administrator password.'])->withInput();
+        }
+
+        $newRole = UserRole::from($validated['role']);
+        $oldRole = $user->role;
+
+        if ($oldRole === $newRole) {
+            return back()->with('info', "User '{$user->name}' is already assigned the {$newRole->label()} role.");
+        }
+
+        $user->update(['role' => $newRole]);
+
+        AuditService::log('ADMIN_USER_ROLE_ELEVATION', $user, [
+            'authorized_by_admin_id' => $admin->id,
+            'authorized_by_admin_name' => $admin->name,
+            'previous_role' => $oldRole->value,
+            'elevated_role' => $newRole->value,
+            'justification' => $validated['reason'],
+            'ip_address' => $request->ip(),
+        ]);
+
+        NotificationService::send(
+            $user,
+            'role_updated',
+            'Account Role Elevation',
+            "Your account privileges have been updated to {$newRole->label()} by Administrator {$admin->name}. Justification: {$validated['reason']}",
+            $newRole === UserRole::ADMIN ? route('admin.dashboard') : route('user.dashboard')
+        );
+
+        return back()->with('success', "Security Verified: User '{$user->name}' has been successfully elevated to {$newRole->label()}.");
     }
 }

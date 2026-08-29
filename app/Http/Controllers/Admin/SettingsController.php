@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class SettingsController extends Controller
@@ -18,6 +19,12 @@ class SettingsController extends Controller
             'allow_public_registration' => config('afterlife.allow_public_registration', true),
             'app_name' => config('app.name', 'Project Afterlife'),
             'app_env' => config('app.env', 'production'),
+            'php_version' => PHP_VERSION,
+            'laravel_version' => app()->version(),
+            'db_driver' => config('database.default'),
+            'cache_driver' => config('cache.default'),
+            'session_driver' => config('session.driver'),
+            'google_oauth_active' => !empty(config('services.google.client_id')),
         ];
 
         return view('admin.settings.index', compact('settings'));
@@ -32,6 +39,6 @@ class SettingsController extends Controller
 
         AuditService::log('SYSTEM_SETTINGS_UPDATED', null, $validated);
 
-        return back()->with('success', 'System parameters updated successfully.');
+        return back()->with('success', 'Platform settings and governance thresholds saved successfully.');
     }
 }

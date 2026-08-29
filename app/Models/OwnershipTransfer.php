@@ -63,4 +63,9 @@ class OwnershipTransfer extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function admin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
 }

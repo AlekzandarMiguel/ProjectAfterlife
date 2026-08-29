@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdoptionReviewController as AdminAdoptionReviewController;
 use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Admin\FinalReviewController as AdminFinalReviewController;
 use App\Http\Controllers\Admin\OwnershipTransferController as AdminOwnershipTransferController;
 use App\Http\Controllers\Admin\ProjectManagementController as AdminProjectManagementController;
@@ -37,6 +38,8 @@ Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index
 Route::get('/explore/{project:slug}', [ExploreController::class, 'show'])->name('explore.show');
 Route::get('/explore/{project:slug}/files/{file}', [ExploreController::class, 'downloadFile'])->name('explore.files.download')->middleware('auth');
 Route::get('/resurrected', [ResurrectedController::class, 'index'])->name('resurrected.index');
+Route::get('/explore/{project:slug}/certificate', [\App\Http\Controllers\CertificateController::class, 'show'])->name('explore.certificate');
+Route::get('/explore/{project:slug}/files/{file}/preview', [\App\Http\Controllers\PublicFilePreviewController::class, 'preview'])->name('explore.files.preview');
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +79,7 @@ Route::middleware(['auth', 'role:user'])->prefix('app')->name('user.')->group(fu
     // Multi-Step Project Upload & Management
     Route::get('/projects/upload', [UserProjectSubmissionController::class, 'create'])->name('projects.create');
     Route::post('/projects/upload', [UserProjectSubmissionController::class, 'store'])->name('projects.store');
+    Route::post('/projects/import-github', [\App\Http\Controllers\User\GitHubImportController::class, 'import'])->name('projects.import-github');
     Route::get('/my-projects', [UserMyProjectsController::class, 'index'])->name('projects.index');
     Route::get('/my-projects/{project:slug}', [UserMyProjectsController::class, 'show'])->name('projects.show');
     Route::get('/my-projects/{project:slug}/edit', [UserProjectSubmissionController::class, 'edit'])->name('projects.edit');
@@ -93,6 +97,8 @@ Route::middleware(['auth', 'role:user'])->prefix('app')->name('user.')->group(fu
     Route::post('/recovery/{project:slug}/tasks', [UserRecoveryWorkspaceController::class, 'storeTask'])->name('recovery.tasks.store');
     Route::patch('/recovery/{project:slug}/tasks/{task}', [UserRecoveryWorkspaceController::class, 'updateTaskStatus'])->name('recovery.tasks.update');
     Route::post('/recovery/{project:slug}/updates', [UserRecoveryWorkspaceController::class, 'storeUpdate'])->name('recovery.updates.store');
+    Route::post('/recovery/{project:slug}/comments', [\App\Http\Controllers\User\RecoveryDiscussionController::class, 'store'])->name('recovery.comments.store');
+    Route::delete('/recovery/{project:slug}/comments/{comment}', [\App\Http\Controllers\User\RecoveryDiscussionController::class, 'destroy'])->name('recovery.comments.destroy');
 
     // Version Management
     Route::get('/recovery/{project:slug}/versions', [UserProjectVersionController::class, 'index'])->name('versions.index');
@@ -118,6 +124,10 @@ Route::middleware(['auth', 'role:user'])->prefix('app')->name('user.')->group(fu
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Admin Notifications Hub
+    Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{id}/read', [AdminNotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [AdminNotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Users Management
@@ -128,6 +138,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('users.approve');
     Route::post('/users/{user}/reject', [AdminUserController::class, 'reject'])->name('users.reject');
+    Route::post('/users/{user}/promote', [AdminUserController::class, 'promote'])->name('users.promote');
 
     // Project Submissions & Review
     Route::get('/submissions', [AdminProjectReviewController::class, 'index'])->name('projects.submissions.index');

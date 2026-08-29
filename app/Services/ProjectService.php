@@ -131,6 +131,24 @@ class ProjectService
         // 3. Store on private disk (outside public webroot)
         $path = $file->storeAs('projects/' . $project->id . '/files', $safeStorageName, 'local');
 
+        // 4. Archive Security Inspection & File Tree Extraction
+        $sha256 = null;
+        $fileTree = null;
+        $securityStatus = 'clean';
+        $isScanned = false;
+
+        $absolutePath = Storage::disk('local')->path($path);
+        if ($safeExtension === 'zip' || in_array($type, [FileType::SOURCE_CODE_ZIP, FileType::RELEASE_PACKAGE], true)) {
+            $inspection = app(ArchiveInspectionService::class)->inspect($absolutePath);
+            $sha256 = $inspection['sha256_hash'];
+            $fileTree = $inspection['file_tree'];
+            $securityStatus = $inspection['security_status'];
+            $isScanned = true;
+        } elseif (file_exists($absolutePath)) {
+            $sha256 = hash_file('sha256', $absolutePath) ?: null;
+            $isScanned = true;
+        }
+
         return ProjectFile::create([
             'project_id' => $project->id,
             'version_id' => $version?->id,
@@ -140,6 +158,11 @@ class ProjectService
             'file_type' => $type,
             'file_size' => $file->getSize(),
             'mime_type' => $file->getMimeType(),
+            'sha256_hash' => $sha256,
+            'file_tree_json' => $fileTree,
+            'is_scanned' => $isScanned,
+            'security_status' => $securityStatus,
+            'scanned_at' => $isScanned ? now() : null,
             'is_current' => true,
         ]);
     }

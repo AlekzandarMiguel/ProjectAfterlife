@@ -131,6 +131,11 @@ class Project extends Model
         return $this->hasOne(OwnershipDeclaration::class)->latestOfMany();
     }
 
+
+    public function recoveryComments(): HasMany
+    {
+        return $this->hasMany(RecoveryComment::class)->latest();
+    }
     public function files(): HasMany
     {
         return $this->hasMany(ProjectFile::class);

@@ -5,6 +5,10 @@
     step: 1,
     selectedCategory: '',
     confirmed: false,
+    githubUrl: '',
+    isImporting: false,
+    importMessage: '',
+    importSuccess: false,
     nextStep() {
         if (this.step < 5) this.step++;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -12,51 +16,106 @@
     prevStep() {
         if (this.step > 1) this.step--;
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    async fetchFromGitHub() {
+        if (!this.githubUrl) {
+            this.importMessage = 'Please enter a valid GitHub repository URL.';
+            this.importSuccess = false;
+            return;
+        }
+        this.isImporting = true;
+        this.importMessage = 'Connecting to GitHub API...';
+        try {
+            const res = await fetch('{{ route('user.projects.import-github') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ url: this.githubUrl })
+            });
+            const data = await res.json();
+            if (data.success && data.data) {
+                const info = data.data;
+                if (info.title && !document.getElementById('title').value) document.getElementById('title').value = info.title;
+                if (info.short_description && !document.getElementById('short_description').value) document.getElementById('short_description').value = info.short_description;
+                if (document.getElementById('repository_url')) document.getElementById('repository_url').value = info.repository_url;
+                if (document.getElementById('license_type') && info.license) document.getElementById('license_type').value = info.license;
+                this.importSuccess = true;
+                this.importMessage = 'Successfully imported metadata from GitHub!';
+            } else {
+                this.importSuccess = false;
+                this.importMessage = data.message || 'Could not fetch repository metadata.';
+            }
+        } catch (e) {
+            this.importSuccess = false;
+            this.importMessage = 'Failed to connect to repository importer.';
+        } finally {
+            this.isImporting = false;
+        }
     }
 }">
     <!-- Step Indicator Progress Bar -->
     <div class="mb-8">
         <div class="grid grid-cols-5 gap-2 text-center text-xs font-mono mb-3">
-            <div :class="step >= 1 ? 'text-emerald-400 font-bold' : 'text-slate-400'">1. Basic Info</div>
-            <div :class="step >= 2 ? 'text-emerald-400 font-bold' : 'text-slate-400'">2. Tech Stack</div>
-            <div :class="step >= 3 ? 'text-emerald-400 font-bold' : 'text-slate-400'">3. Source Files</div>
-            <div :class="step >= 4 ? 'text-emerald-400 font-bold' : 'text-slate-400'">4. Declaration</div>
-            <div :class="step >= 5 ? 'text-emerald-400 font-bold' : 'text-slate-400'">5. Submit</div>
+            <div :class="step >= 1 ? 'text-emerald-400 font-bold' : 'text-slate-500 dark:text-slate-400'">1. Basic Info</div>
+            <div :class="step >= 2 ? 'text-emerald-400 font-bold' : 'text-slate-500 dark:text-slate-400'">2. Tech Stack</div>
+            <div :class="step >= 3 ? 'text-emerald-400 font-bold' : 'text-slate-500 dark:text-slate-400'">3. Source Files</div>
+            <div :class="step >= 4 ? 'text-emerald-400 font-bold' : 'text-slate-500 dark:text-slate-400'">4. Declaration</div>
+            <div :class="step >= 5 ? 'text-emerald-400 font-bold' : 'text-slate-500 dark:text-slate-400'">5. Submit</div>
         </div>
-        <div class="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+        <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
             <div class="h-full bg-emerald-500 transition-all duration-300" :style="'width: ' + (step * 20) + '%'"></div>
         </div>
     </div>
 
-    <form action="{{ route('user.projects.store') }}" method="POST" enctype="multipart/form-data" class="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 shadow-xl">
+    <form action="{{ route('user.projects.store') }}" method="POST" enctype="multipart/form-data" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 p-8 shadow-xl">
         @csrf
 
         <!-- ================= STEP 1: BASIC INFORMATION ================= -->
         <div x-show="step === 1" class="space-y-6">
-            <div>
-                <h2 class="text-lg font-bold text-white tracking-tight">Step 1 — Basic Project Information</h2>
-                <p class="text-xs text-slate-400 mt-1">Provide fundamental identifying details and the reason why development stalled.</p>
+            <!-- GitHub Repository Auto-Fill Assistant -->
+            <div class="rounded-xl border border-emerald-300/60 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-4 w-4 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                        <span class="text-xs font-bold text-slate-900 dark:text-white font-mono">Optional: Auto-Fill from GitHub Repository</span>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="url" x-model="githubUrl" placeholder="https://github.com/owner/repository" class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none">
+                    <button type="button" @click="fetchFromGitHub()" :disabled="isImporting" class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-50 transition">
+                        <span x-show="!isImporting">Fetch Metadata</span>
+                        <span x-show="isImporting">Importing...</span>
+                    </button>
+                </div>
+                <p x-show="importMessage" x-text="importMessage" :class="importSuccess ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'" class="text-[11px] font-mono"></p>
             </div>
 
             <div>
-                <label for="title" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Project Name *</label>
-                <input type="text" id="title" name="title" required value="{{ old('title') }}" placeholder="e.g. HyperLog: Distributed Logging Gateway" class="mt-1.5 block w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Step 1 — Basic Project Information</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Provide fundamental identifying details and the reason why development stalled.</p>
             </div>
 
             <div>
-                <label for="short_description" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Short Description / Pitch *</label>
-                <textarea id="short_description" name="short_description" rows="2" required placeholder="A brief 1-2 sentence summary of what this project does and its core architecture." class="mt-1.5 block w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">{{ old('short_description') }}</textarea>
+                <label for="title" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Project Name *</label>
+                <input type="text" id="title" name="title" required value="{{ old('title') }}" placeholder="e.g. HyperLog: Distributed Logging Gateway" class="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
             </div>
 
             <div>
-                <label for="description" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Full Architecture & Description *</label>
-                <textarea id="description" name="description" rows="6" required placeholder="Describe the original system design, working modules, dependencies, and what was left unfinished." class="mt-1.5 block w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">{{ old('description') }}</textarea>
+                <label for="short_description" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Short Description / Pitch *</label>
+                <textarea id="short_description" name="short_description" rows="2" required placeholder="A brief 1-2 sentence summary of what this project does and its core architecture." class="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">{{ old('short_description') }}</textarea>
+            </div>
+
+            <div>
+                <label for="description" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Full Architecture & Description *</label>
+                <textarea id="description" name="description" rows="6" required placeholder="Describe the original system design, working modules, dependencies, and what was left unfinished." class="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">{{ old('description') }}</textarea>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label for="category_id" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Category *</label>
-                    <select id="category_id" name="category_id" required class="mt-1.5 block w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <label for="category_id" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Category *</label>
+                    <select id="category_id" name="category_id" required class="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                         <option value="">Select Category</option>
                         @foreach($categories as $cat)
                             <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
@@ -65,8 +124,8 @@
                 </div>
 
                 <div>
-                    <label for="project_type" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Project Type *</label>
-                    <select id="project_type" name="project_type" required class="mt-1.5 block w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <label for="project_type" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Project Type *</label>
+                    <select id="project_type" name="project_type" required class="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                         @foreach($projectTypes as $pt)
                             <option value="{{ $pt->value }}" {{ old('project_type') === $pt->value ? 'selected' : '' }}>{{ $pt->label() }}</option>
                         @endforeach
@@ -74,8 +133,8 @@
                 </div>
 
                 <div>
-                    <label for="development_status" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Development Stage *</label>
-                    <select id="development_status" name="development_status" required class="mt-1.5 block w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <label for="development_status" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Development Stage *</label>
+                    <select id="development_status" name="development_status" required class="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                         @foreach($devStatuses as $ds)
                             <option value="{{ $ds->value }}" {{ old('development_status') === $ds->value ? 'selected' : '' }}>{{ $ds->label() }}</option>
                         @endforeach
@@ -85,17 +144,17 @@
 
             <div>
                 <label for="reason_for_abandonment" class="block text-xs font-semibold text-rose-300 uppercase tracking-wider font-mono">Reason for Abandonment *</label>
-                <textarea id="reason_for_abandonment" name="reason_for_abandonment" rows="3" required placeholder="Why was this project abandoned? (e.g. loss of client funding, time constraints, tech stack pivot, complexity)." class="mt-1.5 block w-full rounded-lg border border-rose-900/60 bg-slate-950 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500">{{ old('reason_for_abandonment') }}</textarea>
+                <textarea id="reason_for_abandonment" name="reason_for_abandonment" rows="3" required placeholder="Why was this project abandoned? (e.g. loss of client funding, time constraints, tech stack pivot, complexity)." class="mt-1.5 block w-full rounded-lg border border-rose-900/60 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500">{{ old('reason_for_abandonment') }}</textarea>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="original_development_date" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Original Start Date</label>
-                    <input type="date" id="original_development_date" name="original_development_date" value="{{ old('original_development_date') }}" class="mt-1.5 block w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <label for="original_development_date" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Original Start Date</label>
+                    <input type="date" id="original_development_date" name="original_development_date" value="{{ old('original_development_date') }}" class="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                 </div>
                 <div>
-                    <label for="last_development_date" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Last Active Dev Date</label>
-                    <input type="date" id="last_development_date" name="last_development_date" value="{{ old('last_development_date') }}" class="mt-1.5 block w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <label for="last_development_date" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Last Active Dev Date</label>
+                    <input type="date" id="last_development_date" name="last_development_date" value="{{ old('last_development_date') }}" class="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                 </div>
             </div>
 
@@ -109,18 +168,18 @@
         <!-- ================= STEP 2: TECHNICAL STACK ================= -->
         <div x-show="step === 2" class="space-y-6" style="display: none;">
             <div>
-                <h2 class="text-lg font-bold text-white tracking-tight">Step 2 — Normalized Technical Stack</h2>
-                <p class="text-xs text-slate-400 mt-1">Select all programming languages, frameworks, databases, and libraries used by this software.</p>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Step 2 — Normalized Technical Stack</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Select all programming languages, frameworks, databases, and libraries used by this software.</p>
             </div>
 
             <div class="space-y-6">
                 @foreach($technologies as $type => $techList)
-                    <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+                    <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 p-4">
                         <h3 class="text-xs font-mono uppercase tracking-wider text-emerald-400 font-semibold mb-3">{{ ucfirst($type) }}</h3>
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                             @foreach($techList as $tech)
-                                <label class="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-xs text-slate-300 hover:border-slate-700 cursor-pointer">
-                                    <input type="checkbox" name="technologies[]" value="{{ $tech->id }}" class="h-4 w-4 rounded border-slate-800 bg-slate-950 text-emerald-600 focus:ring-emerald-500">
+                                <label class="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 p-2 text-xs text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:border-slate-700 cursor-pointer">
+                                    <input type="checkbox" name="technologies[]" value="{{ $tech->id }}" class="h-4 w-4 rounded border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-emerald-600 focus:ring-emerald-500">
                                     <span class="truncate">{{ $tech->name }}</span>
                                 </label>
                             @endforeach
@@ -130,7 +189,7 @@
             </div>
 
             <div class="flex items-center justify-between pt-4">
-                <button type="button" @click="prevStep()" class="rounded-lg border border-slate-800 bg-slate-950 px-4 py-2.5 text-xs text-slate-300 hover:text-white transition">
+                <button type="button" @click="prevStep()" class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:text-white transition">
                     &larr; Back
                 </button>
                 <button type="button" @click="nextStep()" class="rounded-lg bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-emerald-500 transition">
@@ -142,35 +201,35 @@
         <!-- ================= STEP 3: PROJECT FILES ================= -->
         <div x-show="step === 3" class="space-y-6" style="display: none;">
             <div>
-                <h2 class="text-lg font-bold text-white tracking-tight">Step 3 — Project Files & Archives</h2>
-                <p class="text-xs text-slate-400 mt-1">Attach source archives, database SQL dumps, README documentation, and screenshots. Files are stored securely in non-executable storage.</p>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Step 3 — Project Files & Archives</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Attach source archives, database SQL dumps, README documentation, and screenshots. Files are stored securely in non-executable storage.</p>
             </div>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Source Code ZIP Archive</label>
-                    <input type="file" name="source_zip" accept=".zip,.tar,.gz,.7z,.rar" class="mt-1.5 block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-950/60 file:text-emerald-300 hover:file:bg-emerald-900/60 file:cursor-pointer border border-slate-800 rounded-lg p-2 bg-slate-950">
-                    <p class="text-[10px] text-slate-400 mt-1">Max 50MB. ZIP or TAR containing the uncompiled source code.</p>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Source Code ZIP Archive</label>
+                    <input type="file" name="source_zip" accept=".zip,.tar,.gz,.7z,.rar" class="mt-1.5 block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-950/60 file:text-emerald-300 hover:file:bg-emerald-900/60 file:cursor-pointer border border-slate-200 dark:border-slate-800 rounded-lg p-2 bg-slate-50 dark:bg-slate-950">
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Max 50MB. ZIP or TAR containing the uncompiled source code.</p>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">README / Quickstart Document</label>
-                    <input type="file" name="readme" accept=".md,.txt,.pdf" class="mt-1.5 block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 file:cursor-pointer border border-slate-800 rounded-lg p-2 bg-slate-950">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">README / Quickstart Document</label>
+                    <input type="file" name="readme" accept=".md,.txt,.pdf" class="mt-1.5 block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 dark:bg-slate-800 file:text-slate-800 dark:text-slate-200 hover:file:bg-slate-700 file:cursor-pointer border border-slate-200 dark:border-slate-800 rounded-lg p-2 bg-slate-50 dark:bg-slate-950">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Database SQL Dump (Optional)</label>
-                    <input type="file" name="database_sql" accept=".sql,.txt,.dump,.zip" class="mt-1.5 block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 file:cursor-pointer border border-slate-800 rounded-lg p-2 bg-slate-950">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Database SQL Dump (Optional)</label>
+                    <input type="file" name="database_sql" accept=".sql,.txt,.dump,.zip" class="mt-1.5 block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 dark:bg-slate-800 file:text-slate-800 dark:text-slate-200 hover:file:bg-slate-700 file:cursor-pointer border border-slate-200 dark:border-slate-800 rounded-lg p-2 bg-slate-50 dark:bg-slate-950">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">Screenshots / Architecture Mockups</label>
-                    <input type="file" name="screenshots[]" multiple accept="image/*" class="mt-1.5 block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 file:cursor-pointer border border-slate-800 rounded-lg p-2 bg-slate-950">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider font-mono">Screenshots / Architecture Mockups</label>
+                    <input type="file" name="screenshots[]" multiple accept="image/*" class="mt-1.5 block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 dark:bg-slate-800 file:text-slate-800 dark:text-slate-200 hover:file:bg-slate-700 file:cursor-pointer border border-slate-200 dark:border-slate-800 rounded-lg p-2 bg-slate-50 dark:bg-slate-950">
                 </div>
             </div>
 
             <div class="flex items-center justify-between pt-4">
-                <button type="button" @click="prevStep()" class="rounded-lg border border-slate-800 bg-slate-950 px-4 py-2.5 text-xs text-slate-300 hover:text-white transition">
+                <button type="button" @click="prevStep()" class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:text-white transition">
                     &larr; Back
                 </button>
                 <button type="button" @click="nextStep()" class="rounded-lg bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-emerald-500 transition">
@@ -182,8 +241,8 @@
         <!-- ================= STEP 4: OWNERSHIP DECLARATION ================= -->
         <div x-show="step === 4" class="space-y-6" style="display: none;">
             <div>
-                <h2 class="text-lg font-bold text-white tracking-tight">Step 4 — Ownership & Submission Declaration</h2>
-                <p class="text-xs text-slate-400 mt-1">To ensure open-source integrity, all uploaders must formally declare rights to the submitted software.</p>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Step 4 — Ownership & Submission Declaration</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">To ensure open-source integrity, all uploaders must formally declare rights to the submitted software.</p>
             </div>
 
             <div class="rounded-xl border border-emerald-950/60 bg-emerald-950/20 p-5 text-xs text-emerald-200 leading-relaxed space-y-3">
@@ -197,17 +256,17 @@
             </div>
 
             <div class="flex items-start">
-                <input id="ownership_confirmed" name="ownership_confirmed" type="checkbox" required x-model="confirmed" class="mt-0.5 h-4 w-4 rounded border-slate-800 bg-slate-950 text-emerald-600 focus:ring-emerald-500">
-                <label for="ownership_confirmed" class="ml-2.5 block text-xs font-medium text-white">
+                <input id="ownership_confirmed" name="ownership_confirmed" type="checkbox" required x-model="confirmed" class="mt-0.5 h-4 w-4 rounded border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-emerald-600 focus:ring-emerald-500">
+                <label for="ownership_confirmed" class="ml-2.5 block text-xs font-medium text-slate-900 dark:text-white">
                     I explicitly confirm the above ownership declaration and authorize Project Afterlife administrators to review and publish this software.
                 </label>
             </div>
 
             <div class="flex items-center justify-between pt-4">
-                <button type="button" @click="prevStep()" class="rounded-lg border border-slate-800 bg-slate-950 px-4 py-2.5 text-xs text-slate-300 hover:text-white transition">
+                <button type="button" @click="prevStep()" class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:text-white transition">
                     &larr; Back
                 </button>
-                <button type="button" @click="nextStep()" :disabled="!confirmed" :class="confirmed ? 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer' : 'bg-slate-800 text-slate-500 cursor-not-allowed'" class="rounded-lg px-5 py-2.5 text-xs font-semibold transition">
+                <button type="button" @click="nextStep()" :disabled="!confirmed" :class="confirmed ? 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed'" class="rounded-lg px-5 py-2.5 text-xs font-semibold transition">
                     Review & Finalize &rarr;
                 </button>
             </div>
@@ -216,13 +275,13 @@
         <!-- ================= STEP 5: FINAL SUBMIT ================= -->
         <div x-show="step === 5" class="space-y-6" style="display: none;">
             <div>
-                <h2 class="text-lg font-bold text-white tracking-tight">Step 5 — Ready to Submit</h2>
-                <p class="text-xs text-slate-400 mt-1">Once submitted, your project status will become <span class="font-mono text-amber-400 font-bold">PENDING_REVIEW</span>. The administrator will be notified immediately.</p>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Step 5 — Ready to Submit</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Once submitted, your project status will become <span class="font-mono text-amber-400 font-bold">PENDING_REVIEW</span>. The administrator will be notified immediately.</p>
             </div>
 
-            <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-5 text-xs text-slate-300 space-y-2">
-                <div class="font-semibold text-white">What happens next?</div>
-                <ul class="list-disc pl-5 space-y-1 text-slate-400 text-[11px]">
+            <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 p-5 text-xs text-slate-700 dark:text-slate-300 space-y-2">
+                <div class="font-semibold text-slate-900 dark:text-white">What happens next?</div>
+                <ul class="list-disc pl-5 space-y-1 text-slate-500 dark:text-slate-400 text-[11px]">
                     <li>An administrator reviews your project metadata, source files, and declaration.</li>
                     <li>If approved, the project is marked <span class="text-emerald-400 font-mono">AVAILABLE</span> and made searchable in the public repository.</li>
                     <li>If revision is needed, you will receive clear feedback in your dashboard to adjust the submission.</li>
@@ -230,7 +289,7 @@
             </div>
 
             <div class="flex items-center justify-between pt-4">
-                <button type="button" @click="prevStep()" class="rounded-lg border border-slate-800 bg-slate-950 px-4 py-2.5 text-xs text-slate-300 hover:text-white transition">
+                <button type="button" @click="prevStep()" class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:text-white transition">
                     &larr; Back
                 </button>
                 <button type="submit" class="rounded-lg bg-emerald-600 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-500 transition shadow-lg flex items-center gap-2">

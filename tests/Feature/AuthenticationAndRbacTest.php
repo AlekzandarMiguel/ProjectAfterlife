@@ -370,4 +370,88 @@ class AuthenticationAndRbacTest extends TestCase
         $response->assertRedirect(route('user.dashboard'));
         $this->assertAuthenticatedAs($user);
     }
+    public function test_admin_can_securely_promote_user_to_admin_with_password_verification(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::ADMIN,
+            'status' => UserStatus::ACTIVE,
+            'password' => bcrypt('AdminSecret123'),
+        ]);
+
+        $developer = User::factory()->create([
+            'role' => UserRole::USER,
+            'status' => UserStatus::ACTIVE,
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.users.promote', $developer), [
+            'role' => 'admin',
+            'reason' => 'Demonstrated exceptional contribution and approved for platform governance.',
+            'admin_password' => 'AdminSecret123',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+
+        $developer->refresh();
+        $this->assertEquals(UserRole::ADMIN, $developer->role);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'ADMIN_USER_ROLE_ELEVATION',
+            'entity_id' => $developer->id,
+        ]);
+    }
+
+    public function test_promotion_fails_with_incorrect_admin_password(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::ADMIN,
+            'status' => UserStatus::ACTIVE,
+            'password' => bcrypt('CorrectPassword123'),
+        ]);
+
+        $developer = User::factory()->create([
+            'role' => UserRole::USER,
+            'status' => UserStatus::ACTIVE,
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.users.promote', $developer), [
+            'role' => 'admin',
+            'reason' => 'Security elevation attempt.',
+            'admin_password' => 'WrongPassword999',
+        ]);
+
+        $response->assertSessionHasErrors(['admin_password']);
+
+        $developer->refresh();
+        $this->assertEquals(UserRole::USER, $developer->role);
+    }
+    public function test_admin_can_access_and_manage_notifications_hub(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::ADMIN,
+            'status' => UserStatus::ACTIVE,
+        ]);
+
+        \App\Services\NotificationService::notifyAdmins(
+            'system_test_alert',
+            'Test System Alert',
+            'A test alert for administrator governance.',
+            route('admin.dashboard')
+        );
+
+        $response = $this->actingAs($admin)->get(route('admin.notifications.index'));
+        $response->assertOk();
+        $response->assertSee('Test System Alert');
+
+        // Mark all as read
+        $readAllRes = $this->actingAs($admin)->post(route('admin.notifications.read-all'));
+        $readAllRes->assertRedirect();
+
+        $unreadCount = \Illuminate\Support\Facades\DB::table('notifications')
+            ->where('notifiable_id', $admin->id)
+            ->whereNull('read_at')
+            ->count();
+
+        $this->assertEquals(0, $unreadCount);
+    }
 }

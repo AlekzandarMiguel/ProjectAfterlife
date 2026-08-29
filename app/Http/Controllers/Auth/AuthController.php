@@ -451,6 +451,13 @@ class AuthController extends Controller
 
         AuditService::log('USER_PASSWORD_RESET', $user);
 
+        NotificationService::notifyAdmins(
+            'user_password_reset',
+            'Security Alert: Password Reset',
+            "User {$user->name} ({$user->email}) completed a password reset via email OTP verification.",
+            route('admin.users.show', $user)
+        );
+
         return redirect()->route('login')->with('success', 'Your password has been successfully reset. Please sign in with your new password.');
     }
 

@@ -38,20 +38,20 @@ enum ProjectStatus: string
         };
     }
 
-    public function badgeClasses(): string
+        public function badgeClasses(): string
     {
         return match($this) {
-            self::DRAFT => 'bg-slate-800 text-slate-300 border-slate-700',
-            self::PENDING_REVIEW => 'bg-amber-950/40 text-amber-300 border-amber-800/50',
-            self::AVAILABLE => 'bg-emerald-950/40 text-emerald-300 border-emerald-800/50',
-            self::ADOPTION_PENDING => 'bg-purple-950/40 text-purple-300 border-purple-800/50',
-            self::ADOPTED, self::UNDER_RECOVERY => 'bg-blue-950/40 text-blue-300 border-blue-800/50',
-            self::INACTIVE => 'bg-yellow-950/40 text-yellow-300 border-yellow-800/50',
-            self::ABANDONED_AGAIN => 'bg-orange-950/40 text-orange-300 border-orange-800/50',
-            self::PENDING_FINAL_REVIEW => 'bg-indigo-950/40 text-indigo-300 border-indigo-800/50',
-            self::RESURRECTED => 'bg-teal-950/40 text-teal-300 border-teal-800/50',
-            self::REJECTED => 'bg-rose-950/40 text-rose-300 border-rose-800/50',
-            self::REVISION_REQUIRED => 'bg-orange-950/40 text-orange-300 border-orange-800/50',
+            self::DRAFT => 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
+            self::PENDING_REVIEW => 'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/50',
+            self::AVAILABLE => 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/50',
+            self::ADOPTION_PENDING => 'bg-purple-100 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800/50',
+            self::ADOPTED, self::UNDER_RECOVERY => 'bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800/50',
+            self::INACTIVE => 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-800/50',
+            self::ABANDONED_AGAIN => 'bg-orange-100 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300 border border-orange-300 dark:border-orange-800/50',
+            self::PENDING_FINAL_REVIEW => 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800/50',
+            self::RESURRECTED => 'bg-teal-100 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-800/50',
+            self::REJECTED => 'bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800/50',
+            self::REVISION_REQUIRED => 'bg-orange-100 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300 border border-orange-300 dark:border-orange-800/50',
         };
     }
 

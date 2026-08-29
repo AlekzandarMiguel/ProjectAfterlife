@@ -19,13 +19,13 @@ enum AdoptionStatus: string
         };
     }
 
-    public function badgeClasses(): string
+        public function badgeClasses(): string
     {
         return match($this) {
-            self::PENDING => 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20',
-            self::APPROVED => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20',
-            self::REJECTED => 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20',
-            self::REVISION_REQUIRED => 'bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-600/20',
+            self::PENDING => 'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/50',
+            self::APPROVED => 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/50',
+            self::REJECTED => 'bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800/50',
+            self::REVISION_REQUIRED => 'bg-orange-100 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300 border border-orange-300 dark:border-orange-800/50',
         };
     }
 }

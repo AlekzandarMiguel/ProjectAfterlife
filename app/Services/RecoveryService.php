@@ -87,6 +87,13 @@ class RecoveryService
 
         $project->update(['last_activity_at' => now()]);
 
+        NotificationService::notifyAdmins(
+            'recovery_update_posted',
+            'Recovery Update Posted',
+            "User {$user->name} posted a recovery progress update for '{$project->title}': '{$title}'",
+            route('admin.recovery.index')
+        );
+
         ProjectHistory::create([
             'project_id' => $project->id,
             'user_id' => $user->id,
@@ -123,6 +130,13 @@ class RecoveryService
             }
 
             $project->update(['last_activity_at' => now()]);
+
+            NotificationService::notifyAdmins(
+                'version_released',
+                'New Version Released',
+                "New version {$version->version_number} ('{$version->title}') was released for '{$project->title}' by {$owner->name}.",
+                route('admin.projects.index')
+            );
 
             ProjectHistory::create([
                 'project_id' => $project->id,

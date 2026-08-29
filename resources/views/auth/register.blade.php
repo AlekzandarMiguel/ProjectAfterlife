@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-slate-950 text-slate-100">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,17 +7,24 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
+        <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-full flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 bg-slate-950">
+<body class="min-h-full flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 bg-slate-50 dark:bg-slate-950">
     <div class="flex-1 flex flex-col lg:flex-row min-h-screen">
         
         <!-- LEFT VIBRANT HERO PANEL -->
-        <div class="lg:w-1/2 flex flex-col justify-between p-8 sm:p-12 lg:p-16 bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-950 text-white relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-800/80">
+        <div class="lg:w-1/2 flex flex-col justify-between p-8 sm:p-12 lg:p-16 bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-950 text-white relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-300 dark:border-slate-800/80">
             <div class="absolute -top-24 -left-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
             <div class="flex items-center justify-between relative z-10">
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-emerald-300 hover:text-white transition">
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-emerald-300 hover:text-slate-900 dark:text-white transition">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                     <span>Back to Home Portal</span>
                 </a>
@@ -25,8 +32,8 @@
             </div>
 
             <div class="my-auto text-center py-12 relative z-10">
-                <div class="mx-auto flex items-center justify-center text-white filter drop-shadow-[0_10px_20px_rgba(16,185,129,0.3)]" style="width: 104px; height: 104px;">
-                    <x-logo-icon size="104" color="text-white" />
+                <div class="mx-auto flex items-center justify-center text-slate-900 dark:text-white filter drop-shadow-[0_10px_20px_rgba(16,185,129,0.3)]" style="width: 104px; height: 104px;">
+                    <x-logo-icon size="104" :forceWhite="true" />
                 </div>
 
                 <h1 class="mt-6 text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
@@ -46,7 +53,7 @@
 
             <div class="grid grid-cols-3 gap-4 pt-6 text-center relative z-10 border-t border-emerald-500/20">
                 <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 rounded-full bg-slate-900/60 border border-emerald-500/30 flex items-center justify-center text-emerald-300 mb-2 shadow-sm">
+                    <div class="w-12 h-12 rounded-full bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-emerald-300 mb-2 shadow-sm">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                     </div>
@@ -55,7 +62,7 @@
                 </div>
 
                 <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 rounded-full bg-slate-900/60 border border-emerald-500/30 flex items-center justify-center text-emerald-300 mb-2 shadow-sm">
+                    <div class="w-12 h-12 rounded-full bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-emerald-300 mb-2 shadow-sm">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                     </div>
@@ -64,7 +71,7 @@
                 </div>
 
                 <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 rounded-full bg-slate-900/60 border border-emerald-500/30 flex items-center justify-center text-emerald-300 mb-2 shadow-sm">
+                    <div class="w-12 h-12 rounded-full bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-emerald-300 mb-2 shadow-sm">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
@@ -75,11 +82,11 @@
         </div>
 
         <!-- RIGHT FORM PANEL -->
-        <div class="lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-slate-950">
-            <div class="w-full max-w-md bg-slate-900/90 rounded-3xl shadow-2xl shadow-emerald-950/30 p-8 sm:p-10 border border-slate-800 backdrop-blur-sm">
+        <div class="lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-slate-50 dark:bg-slate-950 transition-colors">
+            <div class="w-full max-w-md bg-white/90 dark:bg-slate-900/90 rounded-3xl shadow-2xl  p-8 sm:p-10 border border-slate-300 dark:border-slate-800 backdrop-blur-sm">
                 <div>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Create Account</h2>
-                    <p class="mt-1.5 text-xs sm:text-sm text-slate-400">Sign up to start adopting and managing software</p>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Create Account</h2>
+                    <p class="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">Sign up to start adopting and managing software</p>
                 </div>
 
                 <form action="{{ route('register.post') }}" method="POST" class="mt-6 space-y-4" novalidate>
@@ -87,9 +94,9 @@
 
                     <!-- Full Name -->
                     <div>
-                        <label for="name" class="block text-xs font-semibold text-slate-300 mb-1">Full Name <span class="text-rose-400">*</span></label>
-                        <div class="relative rounded-xl border @error('name') border-rose-500 ring-1 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950/80 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition">
-                            <input id="name" name="name" type="text" required value="{{ old('name') }}" placeholder="e.g. Jane Doe" class="block w-full rounded-xl bg-transparent py-2.5 px-3.5 text-sm text-white placeholder-slate-400 focus:outline-none">
+                        <label for="name" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name <span class="text-rose-400">*</span></label>
+                        <div class="relative rounded-xl border @error('name') border-rose-500 /50 @else border-slate-300 dark:border-slate-800 @enderror bg-slate-50 dark:bg-slate-950/80 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition">
+                            <input id="name" name="name" type="text" required value="{{ old('name') }}" placeholder="e.g. Jane Doe" class="block w-full rounded-xl bg-transparent py-2.5 px-3.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none">
                         </div>
                         @error('name')
                             <p class="mt-1.5 text-xs text-rose-400 flex items-center gap-1 font-medium">
@@ -101,9 +108,9 @@
 
                     <!-- Username -->
                     <div>
-                        <label for="username" class="block text-xs font-semibold text-slate-300 mb-1">Username <span class="text-rose-400">*</span></label>
-                        <div class="relative rounded-xl border @error('username') border-rose-500 ring-1 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950/80 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition">
-                            <input id="username" name="username" type="text" required value="{{ old('username') }}" placeholder="e.g. janedev" class="block w-full rounded-xl bg-transparent py-2.5 px-3.5 text-sm text-white placeholder-slate-400 focus:outline-none font-mono">
+                        <label for="username" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Username <span class="text-rose-400">*</span></label>
+                        <div class="relative rounded-xl border @error('username') border-rose-500 /50 @else border-slate-300 dark:border-slate-800 @enderror bg-slate-50 dark:bg-slate-950/80 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition">
+                            <input id="username" name="username" type="text" required value="{{ old('username') }}" placeholder="e.g. janedev" class="block w-full rounded-xl bg-transparent py-2.5 px-3.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none font-mono">
                         </div>
                         @error('username')
                             <p class="mt-1.5 text-xs text-rose-400 flex items-center gap-1 font-medium">
@@ -115,9 +122,9 @@
 
                     <!-- Email -->
                     <div>
-                        <label for="email" class="block text-xs font-semibold text-slate-300 mb-1">Email Address <span class="text-rose-400">*</span></label>
-                        <div class="relative rounded-xl border @error('email') border-rose-500 ring-1 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950/80 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition">
-                            <input id="email" name="email" type="email" required value="{{ old('email') }}" placeholder="jane@domain.com" class="block w-full rounded-xl bg-transparent py-2.5 px-3.5 text-sm text-white placeholder-slate-400 focus:outline-none">
+                        <label for="email" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Address <span class="text-rose-400">*</span></label>
+                        <div class="relative rounded-xl border @error('email') border-rose-500 /50 @else border-slate-300 dark:border-slate-800 @enderror bg-slate-50 dark:bg-slate-950/80 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition">
+                            <input id="email" name="email" type="email" required value="{{ old('email') }}" placeholder="jane@domain.com" class="block w-full rounded-xl bg-transparent py-2.5 px-3.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none">
                         </div>
                         @error('email')
                             <p class="mt-1.5 text-xs text-rose-400 flex items-center gap-1 font-medium">
@@ -130,12 +137,12 @@
                     <!-- Passwords -->
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label for="password" class="block text-xs font-semibold text-slate-300 mb-1">Password <span class="text-rose-400">*</span></label>
-                            <input id="password" name="password" type="password" required placeholder="Min. 8 chars" class="block w-full rounded-xl border @error('password') border-rose-500 ring-1 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950/80 py-2.5 px-3.5 text-sm text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none">
+                            <label for="password" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password <span class="text-rose-400">*</span></label>
+                            <input id="password" name="password" type="password" required placeholder="Min. 8 chars" class="block w-full rounded-xl border @error('password') border-rose-500 /50 @else border-slate-300 dark:border-slate-800 @enderror bg-slate-50 dark:bg-slate-950/80 py-2.5 px-3.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none">
                         </div>
                         <div>
-                            <label for="password_confirmation" class="block text-xs font-semibold text-slate-300 mb-1">Confirm <span class="text-rose-400">*</span></label>
-                            <input id="password_confirmation" name="password_confirmation" type="password" required placeholder="Repeat password" class="block w-full rounded-xl border @error('password') border-rose-500 ring-1 ring-rose-500/50 @else border-slate-800 @enderror bg-slate-950/80 py-2.5 px-3.5 text-sm text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none">
+                            <label for="password_confirmation" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Confirm <span class="text-rose-400">*</span></label>
+                            <input id="password_confirmation" name="password_confirmation" type="password" required placeholder="Repeat password" class="block w-full rounded-xl border @error('password') border-rose-500 /50 @else border-slate-300 dark:border-slate-800 @enderror bg-slate-50 dark:bg-slate-950/80 py-2.5 px-3.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none">
                         </div>
                     </div>
                     @error('password')
@@ -148,8 +155,8 @@
                     <!-- Terms Checkbox -->
                     <div class="pt-1">
                         <div class="flex items-start">
-                            <input id="terms" name="terms" type="checkbox" required value="1" {{ old('terms') ? 'checked' : '' }} class="mt-0.5 h-4 w-4 rounded border-slate-800 bg-slate-950 text-emerald-600 focus:ring-emerald-500">
-                            <label for="terms" class="ml-2 block text-xs text-slate-400">
+                            <input id="terms" name="terms" type="checkbox" required value="1" {{ old('terms') ? 'checked' : '' }} class="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-emerald-600 focus:ring-emerald-500">
+                            <label for="terms" class="ml-2 block text-xs text-slate-500 dark:text-slate-400">
                                 I agree to the <a href="{{ route('about') }}" class="text-emerald-400 font-semibold hover:underline">platform terms and software transfer ethics</a>. <span class="text-rose-400">*</span>
                             </label>
                         </div>
@@ -158,16 +165,32 @@
                         @enderror
                     </div>
 
-                    <div class="pt-2">
+                    <div class="pt-2 space-y-3">
                         <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/50 hover:bg-emerald-500 active:scale-[0.99] transition">
                             <span>Register Account</span>
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                         </button>
+
+                        <div class="relative py-1">
+                            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-300 dark:border-slate-800"></div></div>
+                            <div class="relative flex justify-center text-[10px] uppercase font-mono"><span class="bg-white dark:bg-slate-900 px-3 text-slate-500 dark:text-slate-400">Or continue with</span></div>
+                        </div>
+
+                        <!-- Google Sign Up Button -->
+                        <a href="{{ route('auth.google') }}" class="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 hover:border-slate-600 text-slate-900 dark:text-white font-medium text-xs transition duration-150 shadow-sm group">
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                            </svg>
+                            <span class="group-hover:text-emerald-300 transition">Sign up with Google</span>
+                        </a>
                     </div>
                 </form>
 
                 <div class="mt-6 text-center">
-                    <p class="text-xs text-slate-400">
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
                         Already have an account?
                         <a href="{{ route('login') }}" class="font-bold text-emerald-400 hover:text-emerald-300 hover:underline">Sign in</a>
                     </p>

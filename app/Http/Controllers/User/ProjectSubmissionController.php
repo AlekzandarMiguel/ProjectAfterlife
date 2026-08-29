@@ -9,6 +9,7 @@ use App\Http\Requests\StoreProjectRequest;
 use App\Models\Category;
 use App\Models\Project;
 use App\Models\Technology;
+use App\Services\NotificationService;
 use App\Services\ProjectService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -81,6 +82,12 @@ class ProjectSubmissionController extends Controller
 
         // If it was in REVISION_REQUIRED, put it back to PENDING_REVIEW
         if ($project->status->value === 'REVISION_REQUIRED') {
+            NotificationService::notifyAdmins(
+                'project_resubmitted',
+                'Revised Project Resubmitted',
+                "User " . auth()->user()->name . " resubmitted revised project '{$project->title}' for review.",
+                route('admin.projects.submissions.show', $project)
+            );
             $project->update(['status' => \App\Enums\ProjectStatus::PENDING_REVIEW]);
             $this->projectService->logHistory(
                 $project,
