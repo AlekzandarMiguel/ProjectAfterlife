@@ -18,7 +18,13 @@ class StoreVersionRequest extends FormRequest
             'title' => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string', 'max:500'],
             'release_notes' => ['required', 'string', 'min:20'],
-            'source_zip' => ['nullable', 'file', 'mimes:zip,tar,gz,7z,rar', 'max:51200'],
+            'source_zip' => [
+                'nullable',
+                'file',
+                'mimes:zip,tar,gz',
+                'mimetypes:application/zip,application/x-zip-compressed,application/x-tar,application/gzip,application/x-gzip',
+                'max:51200' // Max 50MB
+            ],
             'is_final_release' => ['nullable', 'boolean'],
         ];
     }

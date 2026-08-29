@@ -120,14 +120,22 @@ class ProjectService
 
     public function storeFile(Project $project, ?ProjectVersion $version, User $user, UploadedFile $file, FileType $type): ProjectFile
     {
-        $safeName = Str::random(40) . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('projects/' . $project->id . '/files', $safeName, 'local');
+        // 1. Sanitize original filename (strip path traversal, null bytes, dangerous characters)
+        $rawFilename = basename($file->getClientOriginalName());
+        $cleanFilename = preg_replace('/[^a-zA-Z0-9_\-\. ]/', '_', $rawFilename) ?? 'attachment';
+        $safeExtension = strtolower($file->getClientOriginalExtension() ?: 'bin');
+
+        // 2. Generate cryptographically safe UUID internal storage name
+        $safeStorageName = (string) Str::uuid() . '.' . $safeExtension;
+
+        // 3. Store on private disk (outside public webroot)
+        $path = $file->storeAs('projects/' . $project->id . '/files', $safeStorageName, 'local');
 
         return ProjectFile::create([
             'project_id' => $project->id,
             'version_id' => $version?->id,
             'uploaded_by' => $user->id,
-            'file_name' => $file->getClientOriginalName(),
+            'file_name' => $cleanFilename,
             'storage_path' => $path,
             'file_type' => $type,
             'file_size' => $file->getSize(),
