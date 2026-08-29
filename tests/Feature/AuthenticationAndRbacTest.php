@@ -207,4 +207,69 @@ class AuthenticationAndRbacTest extends TestCase
         $response = $this->get(route('user.dashboard'));
         $response->assertRedirect(route('login'));
     }
+    public function test_admin_can_provision_new_users_and_admins(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::ADMIN,
+            'status' => UserStatus::ACTIVE,
+        ]);
+
+        // 1. Admin creates a new Administrator account
+        $resAdmin = $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'Secondary Admin',
+            'username' => 'secadmin',
+            'email' => 'secadmin@afterlife.dev',
+            'password' => 'SecAdminPass123',
+            'password_confirmation' => 'SecAdminPass123',
+            'role' => 'admin',
+            'status' => 'active',
+            'bio' => 'Security Operations Lead',
+        ]);
+
+        $resAdmin->assertRedirect(route('admin.users.index'));
+        $this->assertDatabaseHas('users', [
+            'email' => 'secadmin@afterlife.dev',
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        // 2. Admin creates a new Developer account
+        $resUser = $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'Provisioned Dev',
+            'username' => 'provdev',
+            'email' => 'provdev@afterlife.dev',
+            'password' => 'ProvDevPass123',
+            'password_confirmation' => 'ProvDevPass123',
+            'role' => 'user',
+            'status' => 'active',
+            'bio' => 'Legacy PHP specialist',
+        ]);
+
+        $resUser->assertRedirect(route('admin.users.index'));
+        $this->assertDatabaseHas('users', [
+            'email' => 'provdev@afterlife.dev',
+            'role' => 'user',
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_regular_user_cannot_provision_accounts(): void
+    {
+        $user = User::factory()->create([
+            'role' => UserRole::USER,
+            'status' => UserStatus::ACTIVE,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.users.store'), [
+            'name' => 'Hacker Admin',
+            'username' => 'hackeradmin',
+            'email' => 'hacker@afterlife.dev',
+            'password' => 'HackerPass123',
+            'password_confirmation' => 'HackerPass123',
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        $response->assertStatus(403);
+    }
 }
