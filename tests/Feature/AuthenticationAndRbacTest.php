@@ -310,4 +310,64 @@ class AuthenticationAndRbacTest extends TestCase
 
         $response->assertStatus(403);
     }
+    public function test_redirect_to_google_oauth(): void
+    {
+        $response = $this->get(route('auth.google'));
+        $this->assertTrue($response->isRedirect());
+        $this->assertStringContainsString('accounts.google.com', $response->headers->get('Location') ?? '');
+    }
+
+    public function test_google_callback_creates_pending_developer_account(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+
+        $abstractUser = \Mockery::mock('Laravel\Socialite\Two\User');
+        $abstractUser->shouldReceive('getId')->andReturn('google-unique-id-12345');
+        $abstractUser->shouldReceive('getEmail')->andReturn('googledev@afterlife.dev');
+        $abstractUser->shouldReceive('getName')->andReturn('Google Developer');
+        $abstractUser->shouldReceive('getAvatar')->andReturn('https://lh3.googleusercontent.com/a/test-avatar');
+
+        $provider = \Mockery::mock('Laravel\Socialite\Contracts\Provider');
+        $provider->shouldReceive('user')->andReturn($abstractUser);
+
+        \Laravel\Socialite\Facades\Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
+
+        $response = $this->get(route('auth.google.callback'));
+
+        $response->assertRedirect(route('register.pending', ['email' => 'googledev@afterlife.dev']));
+
+        $user = User::where('email', 'googledev@afterlife.dev')->first();
+        $this->assertNotNull($user);
+        $this->assertEquals(UserStatus::PENDING, $user->status);
+        $this->assertEquals('google-unique-id-12345', $user->google_id);
+        $this->assertEquals('google', $user->auth_provider);
+
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\RegistrationReceivedMail::class);
+    }
+
+    public function test_google_callback_logs_in_existing_active_user(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'activegoogle@afterlife.dev',
+            'google_id' => 'existing-google-id-999',
+            'role' => UserRole::USER,
+            'status' => UserStatus::ACTIVE,
+        ]);
+
+        $abstractUser = \Mockery::mock('Laravel\Socialite\Two\User');
+        $abstractUser->shouldReceive('getId')->andReturn('existing-google-id-999');
+        $abstractUser->shouldReceive('getEmail')->andReturn('activegoogle@afterlife.dev');
+        $abstractUser->shouldReceive('getName')->andReturn('Active Google User');
+        $abstractUser->shouldReceive('getAvatar')->andReturn(null);
+
+        $provider = \Mockery::mock('Laravel\Socialite\Contracts\Provider');
+        $provider->shouldReceive('user')->andReturn($abstractUser);
+
+        \Laravel\Socialite\Facades\Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
+
+        $response = $this->get(route('auth.google.callback'));
+
+        $response->assertRedirect(route('user.dashboard'));
+        $this->assertAuthenticatedAs($user);
+    }
 }

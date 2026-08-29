@@ -8,8 +8,10 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Mail\PasswordResetOtpMail;
+use Laravel\Socialite\Facades\Socialite;
 use App\Mail\RegistrationReceivedMail;
 use App\Services\AuditService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +25,109 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    public function redirectToGoogle(): \Symfony\Component\HttpFoundation\RedirectResponse
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback(): RedirectResponse
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+        } catch (\Throwable $e) {
+            return redirect()->route('login')->withErrors(['email' => 'Google authentication failed or was cancelled. Please try again.']);
+        }
+
+        $googleId = (string) $googleUser->getId();
+        $email = strtolower(trim((string) $googleUser->getEmail()));
+        $name = (string) ($googleUser->getName() ?? 'Google User');
+        $avatar = $googleUser->getAvatar();
+
+        $user = User::where('google_id', $googleId)
+            ->orWhere('email', $email)
+            ->first();
+
+        if ($user) {
+            if (!$user->google_id) {
+                $user->update([
+                    'google_id' => $googleId,
+                    'auth_provider' => 'google',
+                    'avatar' => $avatar ?? $user->avatar,
+                ]);
+            }
+
+            if ($user->isPending()) {
+                return redirect()->route('register.pending', ['email' => $user->email])
+                    ->with('status', 'Your account is currently pending administrator verification.');
+            }
+
+            if (!$user->isActive()) {
+                return redirect()->route('login')
+                    ->withErrors(['email' => 'Your account has been suspended. Please contact the administrator.']);
+            }
+
+            Auth::login($user, true);
+            AuditService::log('USER_LOGIN_GOOGLE', $user);
+
+            $defaultRoute = $user->isAdmin() ? route('admin.dashboard') : route('user.dashboard');
+            return redirect()->intended($defaultRoute);
+        }
+
+        // Generate clean unique username from email prefix
+        $baseUsername = Str::slug(explode('@', $email)[0], '');
+        if (empty($baseUsername)) {
+            $baseUsername = 'dev';
+        }
+        $username = $baseUsername;
+        $counter = 1;
+        while (User::where('username', $username)->exists()) {
+            $username = $baseUsername . $counter++;
+        }
+
+        // Create new developer account (PENDING admin approval)
+        $newUser = User::create([
+            'name' => $name,
+            'username' => $username,
+            'email' => $email,
+            'google_id' => $googleId,
+            'auth_provider' => 'google',
+            'avatar' => $avatar,
+            'password' => Str::random(32),
+            'role' => UserRole::USER,
+            'status' => UserStatus::PENDING,
+            'email_verified_at' => now(),
+        ]);
+
+        UserProfile::create([
+            'user_id' => $newUser->id,
+            'bio' => 'Software developer registered via Google Authentication.',
+            'years_of_experience' => 1,
+            'skills' => [],
+        ]);
+
+        NotificationService::notifyAdmins(
+            'user_registration_pending',
+            'New Google User Awaiting Approval',
+            "New developer {$newUser->name} ({$newUser->email}) registered with Google and is awaiting administrator verification.",
+            route('admin.users.show', $newUser)
+        );
+
+        try {
+            Mail::to($newUser->email)->send(new RegistrationReceivedMail($newUser));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed sending registration email to {$newUser->email}: " . $e->getMessage());
+        }
+
+        AuditService::log('USER_REGISTERED_GOOGLE_PENDING_APPROVAL', $newUser);
+
+        return redirect()->route('register.pending', ['email' => $newUser->email])
+            ->with([
+                'registered_email' => $newUser->email,
+                'registered_name' => $newUser->name,
+                'status' => 'Google account connected! Your registration is now pending administrator verification.',
+            ]);
+    }
+
     public function showLogin(): View
     {
         return view('auth.login');
