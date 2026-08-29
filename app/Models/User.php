@@ -73,6 +73,16 @@ class User extends Authenticatable
         return $this->status === UserStatus::ACTIVE;
     }
 
+    public function isPending(): bool
+    {
+        return $this->status === UserStatus::PENDING;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === UserStatus::SUSPENDED;
+    }
+
     public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);

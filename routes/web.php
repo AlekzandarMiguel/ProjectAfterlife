@@ -48,6 +48,7 @@ Route::middleware(['guest', 'throttle:6,1'])->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+    Route::get('/register/pending', [AuthController::class, 'showRegisterPending'])->name('register.pending');
 
     // Password Reset
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
@@ -117,6 +118,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
     Route::patch('/users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('users.approve');
+    Route::post('/users/{user}/reject', [AdminUserController::class, 'reject'])->name('users.reject');
 
     // Project Submissions & Review
     Route::get('/submissions', [AdminProjectReviewController::class, 'index'])->name('projects.submissions.index');

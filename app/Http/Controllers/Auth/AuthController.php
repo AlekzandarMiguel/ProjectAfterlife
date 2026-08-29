@@ -48,6 +48,13 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
+            if ($user->isPending()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors(['email' => 'Your account is currently pending administrator verification. You will be able to sign in once an administrator approves your account.']);
+            }
+
             if (!$user->isActive()) {
                 Auth::logout();
                 $request->session()->invalidate();
@@ -57,11 +64,15 @@ class AuthController extends Controller
 
             AuditService::log('USER_LOGIN', $user);
 
-            if ($user->isAdmin()) {
-                return redirect()->intended(route('admin.dashboard'));
+            $defaultRoute = $user->isAdmin() ? route('admin.dashboard') : route('user.dashboard');
+            $intended = session()->get('url.intended');
+
+            if (!$intended || $intended === url('/') || $intended === route('home') || $intended === url('/login') || $intended === route('login')) {
+                session()->forget('url.intended');
+                return redirect()->to($defaultRoute);
             }
 
-            return redirect()->intended(route('user.dashboard'));
+            return redirect()->intended($defaultRoute);
         }
 
         return back()->withErrors([
@@ -133,9 +144,9 @@ class AuthController extends Controller
             'name' => trim($validated['name']),
             'username' => strtolower(trim($validated['username'])),
             'email' => strtolower(trim($validated['email'])),
-            'password' => Hash::make($validated['password']),
+            'password' => $validated['password'],
             'role' => UserRole::USER,
-            'status' => UserStatus::ACTIVE,
+            'status' => UserStatus::PENDING,
         ]);
 
         UserProfile::create([
@@ -145,10 +156,24 @@ class AuthController extends Controller
             'skills' => [],
         ]);
 
-        Auth::login($user);
-        AuditService::log('USER_REGISTERED', $user);
+        \App\Services\NotificationService::notifyAdmins(
+            'user_registration_pending',
+            'New Account Awaiting Approval',
+            "New developer {$user->name} ({$user->email}) registered and is awaiting administrator verification.",
+            route('admin.users.show', $user)
+        );
 
-        return redirect()->route('user.dashboard')->with('success', 'Welcome to Project Afterlife! Your developer account has been created.');
+        AuditService::log('USER_REGISTERED_PENDING_APPROVAL', $user);
+
+        return redirect()->route('register.pending')->with([
+            'registered_email' => $user->email,
+            'registered_name' => $user->name,
+        ]);
+    }
+
+        public function showRegisterPending(): View
+    {
+        return view('auth.register-pending');
     }
 
     public function showForgotPassword(): View
