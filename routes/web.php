@@ -49,6 +49,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.post')->middleware('throttle:15,1');
     Route::get('/register/pending', [AuthController::class, 'showRegisterPending'])->name('register.pending');
+    Route::get('/register/check-status', [AuthController::class, 'checkRegistrationStatus'])->name('register.check-status');
 
     // Password Reset
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
