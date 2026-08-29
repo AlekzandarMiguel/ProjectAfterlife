@@ -6,6 +6,7 @@ use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRecoveryTaskRequest;
 use App\Models\Project;
+use App\Services\AdoptionService;
 use App\Models\RecoveryTask;
 use App\Services\RecoveryService;
 use Illuminate\Http\RedirectResponse;
@@ -97,5 +98,25 @@ class RecoveryWorkspaceController extends Controller
         $this->recoveryService->addRecoveryUpdate($project, auth()->user(), $validated['update_title'], $validated['update_text']);
 
         return back()->with('success', 'Recovery progress update logged.');
+    }
+
+    public function relinquish(Request $request, Project $project, AdoptionService $adoptionService): RedirectResponse
+    {
+        if (auth()->id() !== $project->owner_id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $validated = $request->validate([
+            'relinquish_reason' => ['required', 'string', 'min:10', 'max:1000'],
+        ]);
+
+        try {
+            $adoptionService->relinquishStewardship($project, auth()->user(), $validated['relinquish_reason']);
+
+            return redirect()->route('user.projects.index')
+                ->with('success', "Stewardship of '{$project->title}' was successfully relinquished and returned to the preservation registry.");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Relinquishment failed: ' . $e->getMessage());
+        }
     }
 }

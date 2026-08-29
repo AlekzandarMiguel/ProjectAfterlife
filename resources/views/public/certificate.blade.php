@@ -25,10 +25,12 @@
             <span>Back to Project Explorer</span>
         </a>
 
-        <button onclick="window.print()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm cursor-pointer font-mono">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-            <span>Print / Save as PDF</span>
-        </button>
+        <div class="flex items-center gap-3">
+            <button onclick="window.print()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm cursor-pointer font-mono">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                <span>Print / Save PDF Deed</span>
+            </button>
+        </div>
     </div>
 
     <!-- Authentic Document Frame -->
@@ -107,25 +109,49 @@
             @endif
         </div>
 
-        <!-- Classical Signatures and Central Seal -->
-        <div class="pt-6 border-t-2 border-emerald-900/30 grid grid-cols-1 sm:grid-cols-3 items-center gap-6 text-center">
-            <!-- Left Signature Line -->
-            <div class="space-y-1">
+        <!-- Classical Signatures and Official Red VERIFIED Stamps Overlay -->
+        <div class="pt-8 border-t-2 border-emerald-900/30 grid grid-cols-1 sm:grid-cols-3 items-center gap-6 text-center relative">
+            
+            <!-- Left: Original Author Signature Block with Smaller Red VERIFIED Stamp Overlay -->
+            <div class="relative flex flex-col items-center justify-center space-y-1 text-center py-2">
+                <!-- Stamped Over Rubber Stamp (Refined Smaller Size) -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <x-rubber-stamp text="VERIFIED" color="#dc2626" rotate="-rotate-12" size="w-28 h-12 sm:w-32 sm:h-14" class="opacity-90" />
+                </div>
+
                 <div class="cert-serif font-bold text-slate-900 text-sm italic">{{ $project->originalOwner->name ?? 'Verified Author' }}</div>
-                <div class="w-44 mx-auto border-b border-slate-700"></div>
-                <div class="text-[10px] uppercase font-sans font-bold tracking-wider text-slate-500">Original Author</div>
+                <div class="w-40 mx-auto border-b-2 border-slate-700 my-1"></div>
+                <div class="text-[10px] uppercase font-sans font-bold tracking-wider text-slate-700">ORIGINAL AUTHOR</div>
+                <div class="text-[9px] font-mono text-emerald-800 font-semibold">Consent Verified &bull; {{ $project->created_at->format('M d, Y') }}</div>
             </div>
 
-            <!-- Central Classic Notary Seal -->
-            <div class="flex justify-center">
+            <!-- Center: Classic Notary Registry Seal -->
+            <div class="flex justify-center z-0">
                 <x-official-seal size="w-28 h-28" />
             </div>
 
-            <!-- Right Signature Line -->
-            <div class="space-y-1">
-                <div class="cert-serif font-bold text-slate-900 text-sm italic">{{ $latestTransfer->adminApprover->name ?? 'Project Afterlife Authority' }}</div>
-                <div class="w-44 mx-auto border-b border-slate-700"></div>
-                <div class="text-[10px] uppercase font-sans font-bold tracking-wider text-slate-500">Authorized Administrator</div>
+            <!-- Right: Authorized Administrator Signature Block (Conditional on Admin Action) -->
+            <div class="relative flex flex-col items-center justify-center space-y-1 text-center py-2">
+                @if($latestTransfer || $project->status !== \App\Enums\ProjectStatus::PENDING_REVIEW)
+                    <!-- Stamped Over Rubber Stamp (Admin Has Formally Sanctioned) -->
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                        <x-rubber-stamp text="AUTHORIZED" color="#dc2626" rotate="rotate-12" size="w-28 h-12 sm:w-32 sm:h-14" class="opacity-90" />
+                    </div>
+
+                    <div class="cert-serif font-bold text-slate-900 text-sm italic">{{ $latestTransfer?->adminApprover?->name ?? 'Platform Administrator' }}</div>
+                    <div class="w-40 mx-auto border-b-2 border-slate-700 my-1"></div>
+                    <div class="text-[10px] uppercase font-sans font-bold tracking-wider text-slate-700">AUTHORIZED ADMINISTRATOR</div>
+                    <div class="text-[9px] font-mono text-emerald-800 font-semibold">
+                        Governance Sanctioned &bull; {{ $latestTransfer ? $latestTransfer->transferred_at->format('M d, Y') : $project->updated_at->format('M d, Y') }}
+                    </div>
+                @else
+                    <div class="cert-serif font-bold text-slate-400 text-sm italic">Awaiting Admin Review</div>
+                    <div class="w-40 mx-auto border-b-2 border-slate-300 my-1"></div>
+                    <div class="text-[10px] uppercase font-sans font-bold tracking-wider text-slate-400">PENDING GOVERNANCE</div>
+                    <div class="text-[9px] font-mono text-slate-400 font-semibold">
+                        Audit in Progress
+                    </div>
+                @endif
             </div>
         </div>
 

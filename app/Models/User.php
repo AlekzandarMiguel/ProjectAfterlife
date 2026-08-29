@@ -133,8 +133,28 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute(): string
     {
         if ($this->avatar) {
-            return asset('storage/' . $this->avatar);
+            if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+                return $this->avatar;
+            }
+            return asset('storage/' . ltrim($this->avatar, '/'));
         }
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=0f172a&color=f8fafc&bold=true';
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=047857&color=ffffff&bold=true';
+    }
+
+    public function getInitialsAttribute(): string
+    {
+        $words = explode(' ', trim($this->name));
+        $initials = '';
+        foreach (array_slice($words, 0, 2) as $w) {
+            if (!empty($w)) {
+                $initials .= mb_strtoupper(mb_substr($w, 0, 1));
+            }
+        }
+        return $initials ?: 'U';
+    }
+
+    public function bookmarkedProjects(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_bookmarks', 'user_id', 'project_id')->withTimestamps();
     }
 }

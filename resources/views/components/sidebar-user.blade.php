@@ -40,6 +40,10 @@
                         <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                         <span>Recovery Workspace</span>
                     </a>
+                    <a href="{{ route('user.bookmarks.index') }}" class="flex items-center gap-3 rounded-xl px-3 py-2 text-xs transition-all duration-150 {{ request()->routeIs('user.bookmarks.*') ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-l-4 border-l-emerald-600 dark:border-l-emerald-400 border border-emerald-200 dark:border-emerald-800/60 font-bold shadow-xs dark:shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 hover:translate-x-1 dark:hover:bg-slate-900/60 dark:hover:text-emerald-300 dark:hover:border-emerald-500/20 border border-transparent font-medium' }}">
+                        <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                        <span>Watchlist</span>
+                    </a>
                 </div>
             </div>
 
@@ -48,7 +52,7 @@
                 <div class="space-y-1">
                     <a href="{{ route('user.notifications.index') }}" class="flex items-center justify-between rounded-xl px-3 py-2 text-xs transition-all duration-150 {{ request()->routeIs('user.notifications.*') ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-l-4 border-l-emerald-600 dark:border-l-emerald-400 border border-emerald-200 dark:border-emerald-800/60 font-bold shadow-xs dark:shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 hover:translate-x-1 dark:hover:bg-slate-900/60 dark:hover:text-emerald-300 dark:hover:border-emerald-500/20 border border-transparent font-medium' }}">
                         <div class="flex items-center gap-3">
-                            <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                            <svg class="h-4 w-4 shrink-0 group-hover:animate-bell transition-transform origin-top" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                             <span>Notifications</span>
                         </div>
                     </a>

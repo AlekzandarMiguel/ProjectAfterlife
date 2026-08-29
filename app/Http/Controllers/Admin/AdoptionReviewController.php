@@ -45,13 +45,21 @@ class AdoptionReviewController extends Controller
     public function approve(Request $request, AdoptionRequest $adoptionRequest): RedirectResponse
     {
         $validated = $request->validate([
+            'admin_password' => ['required', 'string'],
             'admin_notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        /** @var \App\Models\User $admin */
+        $admin = auth()->user();
+
+        if (!\Illuminate\Support\Facades\Hash::check($validated['admin_password'], $admin->password)) {
+            return back()->withErrors(['admin_password' => 'Invalid administrator password. Security verification failed.'])->withInput();
+        }
 
         try {
             $transfer = $this->adoptionService->approveAdoptionAndTransferOwnership(
                 $adoptionRequest,
-                auth()->user(),
+                $admin,
                 $validated['admin_notes'] ?? null
             );
 

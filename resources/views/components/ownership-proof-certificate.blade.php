@@ -21,10 +21,23 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <a href="{{ route('explore.certificate', $project) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-slate-950 border border-emerald-300 dark:border-emerald-700 text-xs font-mono font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition shadow-xs">
-                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                <span>Print Official Certificate</span>
-            </a>
+            @php
+                $canViewCertificate = auth()->check() && (
+                    auth()->user()->isAdmin() ||
+                    (int) auth()->id() === (int) $project->original_owner_id ||
+                    (int) auth()->id() === (int) $project->owner_id ||
+                    $project->adoptionRequests()->where('user_id', auth()->id())->exists() ||
+                    $project->ownershipTransfers()->where('new_owner_id', auth()->id())->exists()
+                );
+            @endphp
+
+            @if($canViewCertificate)
+                <a href="{{ route('explore.certificate', $project) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-slate-950 border border-emerald-300 dark:border-emerald-700 text-xs font-mono font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition shadow-xs">
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    <span>Print Official Certificate</span>
+                </a>
+            @endif
+
             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
                 <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                 <span>CERTIFIED & AUDITED</span>

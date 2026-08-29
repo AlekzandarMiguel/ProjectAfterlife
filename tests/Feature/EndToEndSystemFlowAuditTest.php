@@ -128,8 +128,15 @@ class EndToEndSystemFlowAuditTest extends TestCase
         $previewRes->assertStatus(200);
         $this->assertStringContainsString('E2E Project', (string) $previewRes->json('content'));
 
+        // Non-owner/non-adopter cannot access confidential certificate (403)
         $certRes = $this->get(route('explore.certificate', $project));
-        $certRes->assertStatus(200);
+        $certRes->assertStatus(403);
+
+        // Original Author can access certificate (200)
+        $this->actingAs($author);
+        $authorCertRes = $this->get(route('explore.certificate', $project));
+        $authorCertRes->assertStatus(200);
+        $this->actingAs($adopter);
 
         // 6. ADOPTION PROPOSAL
         $adoptRes = $this->post(route('user.adoptions.store', $project), [
@@ -146,6 +153,7 @@ class EndToEndSystemFlowAuditTest extends TestCase
         // 7. ADMIN APPROVAL & ATOMIC OWNERSHIP TRANSFER
         $this->actingAs($admin);
         $transferRes = $this->post(route('admin.adoption-requests.approve', $adoptionRequest), [
+            'admin_password' => 'password',
             'admin_notes' => 'Strong developer profile and clear roadmap.',
         ]);
         $transferRes->assertRedirect();

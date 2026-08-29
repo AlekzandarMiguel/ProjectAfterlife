@@ -20,7 +20,7 @@
         <div class="divide-y divide-slate-200 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 rounded-xl overflow-hidden">
             @foreach($notifications as $n)
                 @php $data = json_decode($n->data, true); @endphp
-                <div class="p-4 flex items-start justify-between gap-4 {{ is_null($n->read_at) ? 'bg-emerald-950/20' : '' }}">
+                <div class="p-4 flex items-start justify-between gap-4 transition-colors duration-150 hover:bg-slate-100/70 dark:hover:bg-slate-800/50 {{ is_null($n->read_at) ? 'bg-emerald-50/50 dark:bg-emerald-950/30 border-l-4 border-l-emerald-500' : '' }}">
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold text-slate-900 dark:text-white">{{ $data['title'] ?? 'Notification' }}</span>

@@ -39,7 +39,7 @@
             <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 lg:px-8 transition-colors">
                 <div class="flex items-center gap-3">
                     <button type="button" @click="sidebarOpen = true" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white lg:hidden p-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="h-5 w-5 group-hover:animate-bell transition-transform origin-top" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
@@ -70,8 +70,8 @@
                     <x-theme-toggle />
 
                     <!-- Notification Bell -->
-                    <a href="{{ route('admin.notifications.index') }}" class="relative p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent hover:border-slate-200 dark:border-slate-800 transition" title="System Notifications">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <a href="{{ route('admin.notifications.index') }}" class="group relative p-2 text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/50 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-700/60 transition-all duration-200 shadow-xs active:scale-95" title="System Notifications">
+                        <svg class="h-5 w-5 group-hover:animate-bell transition-transform origin-top" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                         @if($adminUnreadNotifs > 0)
@@ -82,12 +82,16 @@
                         @endif
                     </a>
 
-                    <!-- Admin User Pill -->
-                    <div class="flex items-center gap-3 border-l border-slate-200 dark:border-slate-800 pl-4">
-                        <img class="h-7 w-7 rounded-full bg-purple-900 /50" src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}">
-                        <div class="hidden sm:flex flex-col">
-                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">{{ auth()->user()->name }}</span>
-                            <span class="text-[10px] text-purple-400 font-mono">Platform Admin</span>
+                    <!-- Admin User Pill (Human Figure) -->
+                    <div class="flex items-center gap-3 border-l border-slate-200 dark:border-slate-800 pl-4 select-none">
+                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 shadow-xs">
+                            <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div class="hidden sm:flex flex-col text-left">
+                            <span class="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight">{{ auth()->user()->name }}</span>
+                            <span class="text-[10px] text-purple-700 dark:text-purple-400 font-mono font-bold uppercase tracking-wide">Platform Admin</span>
                         </div>
                     </div>
                 </div>

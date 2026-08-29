@@ -248,4 +248,17 @@ class Project extends Model
             ->exists();
         return !$hasPending;
     }
+
+    public function bookmarkedByUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'project_bookmarks', 'project_id', 'user_id')->withTimestamps();
+    }
+
+    public function isBookmarkedBy(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+        return $this->bookmarkedByUsers()->where('user_id', $user->id)->exists();
+    }
 }

@@ -85,10 +85,22 @@
                             @endforeach
                         </div>
                         <div class="flex items-center gap-2">
-                            <a href="{{ route('explore.certificate', $project) }}" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 hover:bg-emerald-600 hover:text-white transition">
-                                <span>Certificate</span>
-                                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                            </a>
+                            @php
+                                $canViewCertificate = auth()->check() && (
+                                    auth()->user()->isAdmin() ||
+                                    (int) auth()->id() === (int) $project->original_owner_id ||
+                                    (int) auth()->id() === (int) $project->owner_id ||
+                                    $project->adoptionRequests()->where('user_id', auth()->id())->exists() ||
+                                    $project->ownershipTransfers()->where('new_owner_id', auth()->id())->exists()
+                                );
+                            @endphp
+
+                            @if($canViewCertificate)
+                                <a href="{{ route('explore.certificate', $project) }}" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 hover:bg-emerald-600 hover:text-white transition">
+                                    <span>Certificate</span>
+                                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                </a>
+                            @endif
                             <a href="{{ route('explore.show', $project) }}" class="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-purple-600 text-xs font-mono font-bold text-white hover:bg-purple-500 transition shadow-xs">
                                 <span>View Repository</span>
                                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>

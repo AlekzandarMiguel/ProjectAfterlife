@@ -128,10 +128,17 @@ class SecurityTestSuiteTest extends TestCase
         ]);
 
         // Regular user cannot approve adoption
-        $this->actingAs($adopter)->post(route('admin.adoption-requests.approve', $adoptionRequest))->assertStatus(403);
+        $this->actingAs($adopter)->post(route('admin.adoption-requests.approve', $adoptionRequest), ['admin_password' => 'password'])->assertStatus(403);
 
-        // Admin approves adoption -> atomic transfer occurs
-        $this->actingAs($admin)->post(route('admin.adoption-requests.approve', $adoptionRequest))->assertRedirect(route('admin.ownership-transfers.index'));
+        // Admin fails with wrong password
+        $this->actingAs($admin)->from(route('admin.adoption-requests.show', $adoptionRequest))->post(route('admin.adoption-requests.approve', $adoptionRequest), [
+            'admin_password' => 'wrong_password',
+        ])->assertSessionHasErrors('admin_password');
+
+        // Admin approves adoption with valid password -> atomic transfer occurs
+        $this->actingAs($admin)->post(route('admin.adoption-requests.approve', $adoptionRequest), [
+            'admin_password' => 'password',
+        ])->assertRedirect(route('admin.ownership-transfers.index'));
 
         $project->refresh();
         $this->assertEquals($adopter->id, $project->owner_id);

@@ -51,7 +51,7 @@
                 <div class="flex items-center gap-4">
                     <!-- Explore Link -->
                     <a href="{{ route('explore.index') }}" class="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-400 transition font-medium">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        <svg class="h-4.5 w-4.5 group-hover:animate-bell transition-transform origin-top" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         <span>Browse Projects</span>
                     </a>
 
@@ -65,8 +65,8 @@
                             ->whereNull('read_at')
                             ->count();
                     @endphp
-                    <a href="{{ route('user.notifications.index') }}" class="relative p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 transition">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <a href="{{ route('user.notifications.index') }}" class="group relative p-2 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700/60 transition-all duration-200 shadow-xs active:scale-95" title="Notifications">
+                        <svg class="h-4.5 w-4.5 group-hover:animate-bell transition-transform origin-top" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                         @if($unreadCount > 0)
@@ -79,7 +79,7 @@
 
                     <!-- User Pill -->
                     <div class="flex items-center gap-3 border-l border-slate-200 dark:border-slate-800 pl-4">
-                        <img class="h-7 w-7 rounded-full bg-slate-100 dark:bg-slate-800 " src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}">
+                        <x-user-avatar :user="auth()->user()" size="w-7 h-7" textSize="text-[10px]" class="ring-1 ring-emerald-500/30" />
                         <div class="hidden sm:flex flex-col">
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">{{ auth()->user()->name }}</span>
                             <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">@ {{ auth()->user()->username ?? 'user' }}</span>

@@ -33,6 +33,8 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:50', 'alpha_dash', "unique:users,username,{$user->id}"],
             'email' => ['required', 'email', 'max:255', "unique:users,email,{$user->id}"],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:2048'],
+            'remove_avatar' => ['nullable', 'boolean'],
             'bio' => ['nullable', 'string', 'max:1000'],
             'years_of_experience' => ['nullable', 'integer', 'min:0', 'max:60'],
             'website_url' => ['nullable', 'url', 'max:255'],
@@ -41,12 +43,31 @@ class ProfileController extends Controller
             'skills_input' => ['nullable', 'string'],
         ]);
 
-        $user->update([
+        $userData = [
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => $validated['email'],
             'github_url' => $validated['github_url'] ?? null,
-        ]);
+        ];
+
+        // Handle Avatar Removal
+        if ($request->boolean('remove_avatar')) {
+            if ($user->avatar && !str_starts_with($user->avatar, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->avatar)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
+            $userData['avatar'] = null;
+        }
+
+        // Handle Custom Avatar Upload
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar && !str_starts_with($user->avatar, 'http') && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->avatar)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $userData['avatar'] = $path;
+        }
+
+        $user->update($userData);
 
         $skillsArray = !empty($validated['skills_input'])
             ? array_map('trim', explode(',', $validated['skills_input']))

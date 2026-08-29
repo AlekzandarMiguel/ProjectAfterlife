@@ -38,10 +38,12 @@
                     </div>
 
                     <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                        <span class="text-[11px] text-slate-500 dark:text-slate-400">Active: {{ $project->last_activity_at?->diffForHumans() }}</span>
-                        <a href="{{ route('user.recovery.workspace', $project) }}" class="rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition">
-                            Enter Workspace &rarr;
-                        </a>
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">Active: {{ $project->last_activity_at?->diffForHumans() }}</span>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('user.recovery.workspace', $project) }}" class="rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition">
+                                Enter Workspace &rarr;
+                            </a>
+                        </div>
                     </div>
                 </div>
             @endforeach

@@ -215,4 +215,61 @@ class AdoptionService
             AuditService::log('ADOPTION_REJECTED', $request, ['reason' => $reason]);
         });
     }
+
+    /**
+     * Voluntary Relinquishment of Stewardship by Adopter
+     */
+    public function relinquishStewardship(Project $project, User $adopter, string $reason): void
+    {
+        if ((int) $project->owner_id !== (int) $adopter->id) {
+            throw new Exception('Only the current adopted owner can relinquish stewardship.');
+        }
+
+        if ($project->status !== ProjectStatus::UNDER_RECOVERY) {
+            throw new Exception('Only projects currently under recovery can be relinquished.');
+        }
+
+        DB::transaction(function () use ($project, $adopter, $reason) {
+            $oldOwner = $project->owner;
+            $originalOwner = $project->originalOwner ?? $adopter;
+
+            // Reset owner back to original creator and status back to AVAILABLE
+            $project->update([
+                'owner_id' => $project->original_owner_id ?? $adopter->id,
+                'status' => ProjectStatus::AVAILABLE,
+                'last_activity_at' => now(),
+            ]);
+
+            ProjectHistory::create([
+                'project_id' => $project->id,
+                'user_id' => $adopter->id,
+                'action' => 'STEWARDSHIP_RELINQUISHED',
+                'old_status' => ProjectStatus::UNDER_RECOVERY->value,
+                'new_status' => ProjectStatus::AVAILABLE->value,
+                'description' => "Adopter {$adopter->name} voluntarily relinquished stewardship. Reason: {$reason}",
+            ]);
+
+            NotificationService::notifyAdmins(
+                'stewardship_relinquished',
+                'Stewardship Voluntarily Relinquished',
+                "Adopter {$adopter->name} relinquished custody of '{$project->title}'. The repository has returned to Available status.",
+                route('admin.projects.index')
+            );
+
+            if ($project->original_owner_id && (int) $project->original_owner_id !== (int) $adopter->id) {
+                NotificationService::send(
+                    $project->originalOwner,
+                    'stewardship_relinquished',
+                    'Project Returned to Preservation Registry',
+                    "The current adopter voluntarily released stewardship of your project '{$project->title}'. It is now open for new adopters.",
+                    route('explore.show', $project)
+                );
+            }
+
+            AuditService::log('STEWARDSHIP_RELINQUISHED', $project, [
+                'relinquished_by' => $adopter->id,
+                'reason' => $reason,
+            ]);
+        });
+    }
 }

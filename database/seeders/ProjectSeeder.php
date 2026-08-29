@@ -498,6 +498,100 @@ class ProjectSeeder extends Seeder
             ]
         );
 
+
+        // -------------------------------------------------------------
+        // PROJECT 9: UNDER RECOVERY (GoStream for Elena)
+        // Original Owner: Amira -> Transferred to: Elena -> UNDER_RECOVERY
+        // -------------------------------------------------------------
+        $p9 = Project::updateOrCreate(
+            ['slug' => 'gostream-distributed-transcoder'],
+            [
+                'owner_id' => $elena->id,
+                'original_owner_id' => $amira->id,
+                'category_id' => $catCli->id,
+                'title' => 'GoStream: Distributed Video Transcoding Node',
+                'short_description' => 'A resilient, multi-threaded FFmpeg job orchestrator in Go with Redis queue management.',
+                'description' => "GoStream distributes high-load media encoding jobs across worker pools.\n\nElena adopted this repository to add HLS segmenting and Webhook notifications.",
+                'project_type' => ProjectType::CLI,
+                'development_status' => DevelopmentStatus::BETA,
+                'reason_for_abandonment' => 'Original team shifted focus to a cloud SaaS product.',
+                'original_development_date' => '2023-10-01',
+                'last_development_date' => '2024-04-12',
+                'status' => ProjectStatus::UNDER_RECOVERY,
+                'is_featured' => true,
+                'published_at' => now()->subMonths(2),
+                'last_activity_at' => now()->subDays(1),
+            ]
+        );
+        $p9->technologies()->sync([$techGo->id, $techDocker->id]);
+
+        $tasks9 = [
+            ['title' => 'Upgrade FFmpeg 6 bindings in Go', 'phase' => TaskPhase::REPAIR, 'prio' => TaskPriority::HIGH, 'status' => TaskStatus::COMPLETED],
+            ['title' => 'Implement distributed Redis BullMQ worker queue', 'phase' => TaskPhase::DEVELOPMENT, 'prio' => TaskPriority::URGENT, 'status' => TaskStatus::COMPLETED],
+            ['title' => 'Add adaptive bitrate HLS chunk generator', 'phase' => TaskPhase::DEVELOPMENT, 'prio' => TaskPriority::HIGH, 'status' => TaskStatus::IN_PROGRESS],
+            ['title' => 'Write benchmark stress tests under heavy CPU load', 'phase' => TaskPhase::TESTING, 'prio' => TaskPriority::MEDIUM, 'status' => TaskStatus::TODO],
+            ['title' => 'Package multi-arch Docker image with hardware acceleration', 'phase' => TaskPhase::DEPLOYMENT, 'prio' => TaskPriority::MEDIUM, 'status' => TaskStatus::TODO],
+        ];
+        foreach ($tasks9 as $idx => $t) {
+            RecoveryTask::create([
+                'project_id' => $p9->id,
+                'assigned_to' => $elena->id,
+                'title' => $t['title'],
+                'phase' => $t['phase'],
+                'priority' => $t['prio'],
+                'status' => $t['status'],
+                'due_date' => now()->addWeeks(3),
+                'completed_at' => $t['status'] === TaskStatus::COMPLETED ? now()->subDays(3) : null,
+                'order_index' => $idx + 1,
+            ]);
+        }
+
+        // -------------------------------------------------------------
+        // PROJECT 10: UNDER RECOVERY (DevShield WAF for Marcus)
+        // Original Owner: Devon -> Transferred to: Marcus -> UNDER_RECOVERY
+        // -------------------------------------------------------------
+        $p10 = Project::updateOrCreate(
+            ['slug' => 'devshield-waf-proxy'],
+            [
+                'owner_id' => $marcus->id,
+                'original_owner_id' => $devon->id,
+                'category_id' => $catSec->id,
+                'title' => 'DevShield: Reverse Proxy & WAF Middleware',
+                'short_description' => 'Lightweight reverse proxy with rate limiting, OWASP rule filtering, and SQLi protection in TypeScript.',
+                'description' => "DevShield intercepts malicious payloads before reaching internal Node.js/PHP backend APIs.\n\nMarcus adopted this project to add Redis rate limiting and Prometheus metrics.",
+                'project_type' => ProjectType::API,
+                'development_status' => DevelopmentStatus::ALPHA,
+                'reason_for_abandonment' => 'Abandoned due to lack of time to implement TLS automated cert renewal.',
+                'original_development_date' => '2024-01-05',
+                'last_development_date' => '2024-06-15',
+                'status' => ProjectStatus::UNDER_RECOVERY,
+                'is_featured' => true,
+                'published_at' => now()->subMonths(1),
+                'last_activity_at' => now()->subHours(12),
+            ]
+        );
+        $p10->technologies()->sync([$techTs->id, $techDocker->id]);
+
+        $tasks10 = [
+            ['title' => 'Audit OWASP Core Rule Set parser in TypeScript', 'phase' => TaskPhase::ASSESSMENT, 'prio' => TaskPriority::HIGH, 'status' => TaskStatus::COMPLETED],
+            ['title' => 'Implement sliding-window Redis rate limiter', 'phase' => TaskPhase::REPAIR, 'prio' => TaskPriority::HIGH, 'status' => TaskStatus::COMPLETED],
+            ['title' => 'Add automated Let\'s Encrypt ACME certificate manager', 'phase' => TaskPhase::DEVELOPMENT, 'prio' => TaskPriority::URGENT, 'status' => TaskStatus::IN_PROGRESS],
+            ['title' => 'Export Prometheus metrics endpoint for request latency and blocked IP stats', 'phase' => TaskPhase::DEVELOPMENT, 'prio' => TaskPriority::MEDIUM, 'status' => TaskStatus::TODO],
+        ];
+        foreach ($tasks10 as $idx => $t) {
+            RecoveryTask::create([
+                'project_id' => $p10->id,
+                'assigned_to' => $marcus->id,
+                'title' => $t['title'],
+                'phase' => $t['phase'],
+                'priority' => $t['prio'],
+                'status' => $t['status'],
+                'due_date' => now()->addWeeks(2),
+                'completed_at' => $t['status'] === TaskStatus::COMPLETED ? now()->subDays(2) : null,
+                'order_index' => $idx + 1,
+            ]);
+        }
+
         // Audit Logs Seed
         AuditLog::create(['user_id' => $admin->id, 'action' => 'SYSTEM_INIT', 'entity_type' => null, 'entity_id' => null, 'ip_address' => '127.0.0.1', 'user_agent' => 'ProjectAfterlifeSeeder/1.0', 'metadata' => ['note' => 'System seeded with verified development records']]);
     }

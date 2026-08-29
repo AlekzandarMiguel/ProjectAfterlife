@@ -25,6 +25,7 @@ use App\Http\Controllers\User\ProfileController as UserProfileController;
 use App\Http\Controllers\User\ProjectSubmissionController as UserProjectSubmissionController;
 use App\Http\Controllers\User\ProjectVersionController as UserProjectVersionController;
 use App\Http\Controllers\User\RecoveryWorkspaceController as UserRecoveryWorkspaceController;
+use App\Http\Controllers\User\BookmarkController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -38,8 +39,10 @@ Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index
 Route::get('/explore/{project:slug}', [ExploreController::class, 'show'])->name('explore.show');
 Route::get('/explore/{project:slug}/files/{file}', [ExploreController::class, 'downloadFile'])->name('explore.files.download')->middleware('auth');
 Route::get('/resurrected', [ResurrectedController::class, 'index'])->name('resurrected.index');
-Route::get('/explore/{project:slug}/certificate', [\App\Http\Controllers\CertificateController::class, 'show'])->name('explore.certificate');
+Route::get('/explore/{project:slug}/certificate', [\App\Http\Controllers\CertificateController::class, 'show'])->name('explore.certificate')->middleware('auth');
 Route::get('/explore/{project:slug}/files/{file}/preview', [\App\Http\Controllers\PublicFilePreviewController::class, 'preview'])->name('explore.files.preview');
+
+Route::post('/api/webhooks/github/{project:slug}', [\App\Http\Controllers\Webhooks\GitHubWebhookController::class, 'handle'])->name('webhooks.github');
 
 /*
 |--------------------------------------------------------------------------
@@ -99,6 +102,9 @@ Route::middleware(['auth', 'role:user'])->prefix('app')->name('user.')->group(fu
     Route::post('/recovery/{project:slug}/updates', [UserRecoveryWorkspaceController::class, 'storeUpdate'])->name('recovery.updates.store');
     Route::post('/recovery/{project:slug}/comments', [\App\Http\Controllers\User\RecoveryDiscussionController::class, 'store'])->name('recovery.comments.store');
     Route::delete('/recovery/{project:slug}/comments/{comment}', [\App\Http\Controllers\User\RecoveryDiscussionController::class, 'destroy'])->name('recovery.comments.destroy');
+    Route::post('/recovery/{project:slug}/relinquish', [UserRecoveryWorkspaceController::class, 'relinquish'])->name('recovery.relinquish');
+    Route::get('/watchlist', [BookmarkController::class, 'index'])->name('bookmarks.index');
+    Route::post('/projects/{project:slug}/bookmark', [BookmarkController::class, 'toggle'])->name('bookmarks.toggle');
 
     // Version Management
     Route::get('/recovery/{project:slug}/versions', [UserProjectVersionController::class, 'index'])->name('versions.index');

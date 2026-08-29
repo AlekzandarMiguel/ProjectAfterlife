@@ -97,13 +97,26 @@
 
             <form action="{{ route('admin.adoption-requests.approve', $adoptionRequest) }}" method="POST" class="space-y-4 pt-2">
                 @csrf
+                
+                <!-- Password Security Verification -->
+                <div class="p-3.5 rounded-xl bg-purple-950/30 border border-purple-800/50 space-y-2">
+                    <label class="block text-xs font-bold text-slate-900 dark:text-purple-200">
+                        Administrator Password Verification *
+                    </label>
+                    <p class="text-[11px] text-slate-500 dark:text-purple-300/70">Enter your administrator password to authorize and sanction this legal custody transfer.</p>
+                    <input type="password" name="admin_password" required placeholder="Enter your admin password" class="mt-1 block w-full rounded-lg border border-slate-300 dark:border-purple-700/60 bg-white dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono">
+                    @error('admin_password')
+                        <p class="text-xs text-rose-500 font-medium">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <div>
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Admin Approval Notes (Optional)</label>
-                    <textarea name="admin_notes" rows="2" placeholder="Notes to applicant and previous owner..." class="mt-1 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
+                    <textarea name="admin_notes" rows="2" placeholder="Notes to applicant and previous owner..." class="mt-1 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="approveModal = false" class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-500 dark:text-slate-400 hover:text-white">Cancel</button>
-                    <button type="submit" class="rounded-lg bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-emerald-500 transition">Confirm Ownership Transfer</button>
+                    <button type="button" @click="approveModal = false" class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-500 dark:text-slate-400 hover:text-white cursor-pointer">Cancel</button>
+                    <button type="submit" class="rounded-lg bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-emerald-500 transition cursor-pointer shadow-xs">Authorize & Transfer Ownership</button>
                 </div>
             </form>
         </div>

@@ -4,7 +4,7 @@
 <div class="max-w-4xl mx-auto space-y-8">
     <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div class="flex items-center gap-4">
-            <img class="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 ring-2 ring-emerald-500/50" src="{{ $user->avatar_url }}" alt="{{ $user->name }}">
+            <x-user-avatar :user="$user" size="w-16 h-16" textSize="text-xl" class="ring-2 ring-emerald-500/50 shadow-sm" />
             <div>
                 <h1 class="text-xl font-bold text-slate-900 dark:text-white">{{ $user->name }}</h1>
                 <div class="text-xs text-slate-500 dark:text-slate-400 font-mono">@ {{ $user->username ?? 'user' }} • Member since {{ $user->created_at->format('M Y') }}</div>
