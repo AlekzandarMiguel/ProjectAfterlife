@@ -8,6 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property int $id
+ * @property int $project_id
+ * @property int $user_id
+ * @property string $proposal
+ * @property string $technical_qualification
+ * @property string $estimated_timeline
+ * @property \App\Enums\AdoptionStatus $status
+ * @property string|null $admin_notes
+ * @property int|null $reviewed_by
+ * @property \Illuminate\Support\Carbon|null $reviewed_at
+ * @property-read \App\Models\Project $project
+ * @property-read \App\Models\User $applicant
+ * @property-read \App\Models\User|null $reviewer
+ */
 class AdoptionRequest extends Model
 {
     use HasFactory;

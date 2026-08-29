@@ -9,6 +9,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $project_id
+ * @property int|null $assigned_to
+ * @property string $title
+ * @property string|null $description
+ * @property \App\Enums\TaskPhase $phase
+ * @property \App\Enums\TaskPriority $priority
+ * @property \App\Enums\TaskStatus $status
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $completed_at
+ * @property-read \App\Models\Project $project
+ * @property-read \App\Models\User|null $assignee
+ */
 class RecoveryTask extends Model
 {
     use HasFactory;

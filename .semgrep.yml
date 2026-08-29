@@ -1,0 +1,30 @@
+rules:
+  - id: laravel-raw-sql-injection
+    patterns:
+      - pattern-either:
+          - pattern: DB::raw($QUERY)
+          - pattern: $BUILDER->whereRaw($QUERY)
+          - pattern: $BUILDER->havingRaw($QUERY)
+          - pattern: $BUILDER->orderByRaw($QUERY)
+    message: "Potential SQL Injection in raw query. Use parameterized queries or bindings."
+    languages: [php]
+    severity: ERROR
+
+  - id: laravel-mass-assignment-guarded
+    patterns:
+      - pattern: class $MODEL extends Model { protected $guarded = []; }
+    message: "Model has $guarded = [] without specific fillable protection, allowing mass assignment vulnerability."
+    languages: [php]
+    severity: WARNING
+
+  - id: dangerous-eval-exec
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: exec(...)
+          - pattern: shell_exec(...)
+          - pattern: system(...)
+          - pattern: passthru(...)
+    message: "Direct system execution detected. Ensure strict input sanitization or avoid system commands."
+    languages: [php]
+    severity: ERROR

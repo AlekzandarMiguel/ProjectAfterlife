@@ -1,0 +1,157 @@
+{
+    "info": {
+        "_postman_id": "8f3b6a9c-7d1e-4f2a-b9c8-projectafterlife-sec",
+        "name": "Project Afterlife \u2014 Security & RBAC Test Collection",
+        "description": "Comprehensive security testing collection for verifying Authentication, Authorization, IDOR, and Validation in Project Afterlife.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://127.0.0.1:8000",
+            "type": "string"
+        },
+        {
+            "key": "admin_email",
+            "value": "admin@afterlife.dev",
+            "type": "string"
+        },
+        {
+            "key": "user_email",
+            "value": "elena@afterlife.dev",
+            "type": "string"
+        },
+        {
+            "key": "default_password",
+            "value": "password",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "1. Authentication Security",
+            "item": [
+                {
+                    "name": "Login - Valid User Credentials",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/login",
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "email",
+                                    "value": "{{user_email}}"
+                                },
+                                {
+                                    "key": "password",
+                                    "value": "{{default_password}}"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login - Block Empty / Malformed Email (422 Validation)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/login",
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "email",
+                                    "value": "invalid-email-format"
+                                },
+                                {
+                                    "key": "password",
+                                    "value": ""
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "2. RBAC & Privilege Separation",
+            "item": [
+                {
+                    "name": "Admin Dashboard - Unauthenticated Guest Blocked (302/401)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "text/html"
+                            }
+                        ],
+                        "url": "{{base_url}}/admin/dashboard"
+                    }
+                },
+                {
+                    "name": "Admin Users - Regular User Forbidden (403)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "text/html"
+                            }
+                        ],
+                        "url": "{{base_url}}/admin/users"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "3. IDOR & Resource Protection",
+            "item": [
+                {
+                    "name": "Project Workspace - Unauthorized User Access (403)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "text/html"
+                            }
+                        ],
+                        "url": "{{base_url}}/recovery/project-quantumql"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "4. Public Read-Only Endpoints",
+            "item": [
+                {
+                    "name": "Explore Repository (200 OK)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/explore"
+                    }
+                },
+                {
+                    "name": "Resurrected Hall of Fame (200 OK)",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/resurrected"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -27,7 +27,7 @@ class AdoptionController extends Controller
         return view('user.adoptions.index', compact('requests'));
     }
 
-    public function create(Project $project): View
+    public function create(Project $project): View|RedirectResponse
     {
         if (!$project->canBeAdoptedBy(auth()->user())) {
             return redirect()->route('explore.show', $project)->with('error', 'You cannot apply to adopt this project.');

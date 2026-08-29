@@ -1,0 +1,11 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist for test fixtures and example envs"
+files = [
+    '''\.env\.example''',
+    '''composer\.lock''',
+    '''package-lock\.json''',
+    '''tests/.*''',
+]

@@ -6,6 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int|null $user_id
+ * @property string $event
+ * @property string|null $ip_address
+ * @property string|null $user_agent
+ * @property array<string, mixed>|null $details
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property-read \App\Models\User|null $user
+ */
 class AuditLog extends Model
 {
     use HasFactory;
