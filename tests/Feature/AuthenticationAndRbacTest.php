@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\AccountApprovedMail;
+use App\Mail\PasswordResetOtpMail;
 use App\Mail\RegistrationReceivedMail;
 use App\Models\User;
 use App\Enums\UserRole;
@@ -141,31 +142,63 @@ class AuthenticationAndRbacTest extends TestCase
 
     public function test_forgot_password_and_password_reset_flow(): void
     {
+        $this->post(route('logout'));
+        $this->flushSession();
+        Mail::fake();
+
         $user = User::factory()->create([
             'email' => 'resurrector@afterlife.dev',
             'password' => Hash::make('OldPassword1'),
             'status' => UserStatus::ACTIVE,
         ]);
 
-        // Request reset link
+        // 1. Request 6-digit OTP
         $res = $this->post(route('password.email'), [
             'email' => 'resurrector@afterlife.dev',
         ]);
-        $res->assertSessionHas('status');
+        $res->assertRedirect(route('password.verify.form', ['email' => 'resurrector@afterlife.dev']));
 
         $this->assertDatabaseHas('password_reset_tokens', [
             'email' => 'resurrector@afterlife.dev',
         ]);
 
-        // Reset password
-        $token = 'test-token-12345';
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => 'resurrector@afterlife.dev'],
-            ['token' => Hash::make($token), 'created_at' => now()]
-        );
+        // Verify OTP email sent
+        Mail::assertSent(PasswordResetOtpMail::class, function ($mail) use ($user) {
+            return $mail->hasTo($user->email) && strlen($mail->otp) === 6;
+        });
 
+        // 2. Test Invalid Code fails
+        $failVerify = $this->post(route('password.verify.code'), [
+            'email' => 'resurrector@afterlife.dev',
+            'code' => '000000',
+        ]);
+        $failVerify->assertSessionHasErrors(['code']);
+
+        // Mock known 6-digit OTP
+        $knownOtp = '749201';
+        DB::table('password_reset_tokens')->where('email', 'resurrector@afterlife.dev')->update([
+            'token' => Hash::make($knownOtp),
+            'created_at' => now(),
+        ]);
+
+        // 3. Verify valid 6-digit code
+        $verifyRes = $this->post(route('password.verify.code'), [
+            'email' => 'resurrector@afterlife.dev',
+            'code' => $knownOtp,
+        ]);
+
+        $verifyRes->assertSessionHasNoErrors();
+        $this->assertTrue($verifyRes->isRedirect());
+
+        // Get the generated authorization token from redirect URL path (/reset-password/{token})
+        $redirectUrl = $verifyRes->headers->get('Location');
+        $path = parse_url($redirectUrl, PHP_URL_PATH);
+        $verifiedToken = basename($path);
+        $this->assertNotEmpty($verifiedToken);
+
+        // 4. Set new password
         $resetRes = $this->post(route('password.update'), [
-            'token' => $token,
+            'token' => $verifiedToken,
             'email' => 'resurrector@afterlife.dev',
             'password' => 'NewPassword123',
             'password_confirmation' => 'NewPassword123',
@@ -177,6 +210,11 @@ class AuthenticationAndRbacTest extends TestCase
         // Verify new password works
         $user->refresh();
         $this->assertTrue(Hash::check('NewPassword123', $user->password));
+
+        // Token is consumed & deleted
+        $this->assertDatabaseMissing('password_reset_tokens', [
+            'email' => 'resurrector@afterlife.dev',
+        ]);
     }
 
     public function test_regular_user_cannot_access_admin_console(): void
